@@ -1,0 +1,464 @@
+<Page x:Class="MedicalStore.Views.PosView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="POS" Background="{StaticResource BgPrimaryBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="360"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT: Products + Today Sales -->
+        <Grid Grid.Column="0" Margin="0,0,14,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Search Bar -->
+            <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="16,12" Margin="0,0,0,10">
+                <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" x:Name="txtProductSearch" Style="{StaticResource ModernTextBox}"
+                                 TextChanged="txtProductSearch_TextChanged"
+                                 PreviewKeyDown="txtProductSearch_PreviewKeyDown"
+                                 Tag="Search medicine by name or barcode..." FontSize="15" Height="44"/>
+                        <!-- Search Results Popup -->
+                        <Popup x:Name="popupSearch" PlacementTarget="{Binding ElementName=txtProductSearch}"
+                               Placement="Bottom" StaysOpen="False"
+                               Width="{Binding ActualWidth, ElementName=txtProductSearch}">
+                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="0,0,10,10" MaxHeight="320">
+                                <Border.Effect><DropShadowEffect ShadowDepth="3" BlurRadius="12" Opacity="0.12"/></Border.Effect>
+                                <ListBox x:Name="lstSearchResults"
+                                         PreviewMouseLeftButtonUp="ProductList_MouseUp"
+                                         PreviewKeyDown="ProductList_KeyDown"
+                                         FontSize="13" BorderThickness="0">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="4,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <TextBlock Text="{Binding Name}"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Category.Name}"
+                                                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" CornerRadius="4" Padding="6,2" Margin="10,0,6,0"
+                                                        Background="#E8F5E9" VerticalAlignment="Center">
+                                                    <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#2E7D32">
+                                                        <Run Text="Rs "/>
+                                                        <Run Text="{Binding SalePrice, Converter={StaticResource RawCurrencyConverter}}"/>
+                                                    </TextBlock>
+                                                </Border>
+                                                <Border Grid.Column="2" CornerRadius="4" Padding="6,2"
+                                                        VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Quantity}" Value="0">
+                                                                    <Setter Property="Background" Value="#FFEBEE"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                        <Run Text="Stock: "/>
+                                                        <Run Text="{Binding Quantity}"/>
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Quantity}" Value="0">
+                                                                        <Setter Property="Foreground" Value="#C62828"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <WrapPanel Grid.Row="1" Margin="0,10,0,0">
+                        <Button Content="Return / Refund" Style="{StaticResource DangerButton}"
+                                Click="QuickReturn_Click" Margin="0,0,8,0" Height="34" FontSize="12" Padding="14,0"/>
+                        <Button Content="Replace Item" Style="{StaticResource AccentButton}"
+                                Click="QuickReturn_Click" Height="34" FontSize="12" Padding="14,0"/>
+                    </WrapPanel>
+                </Grid>
+            </Border>
+
+            <!-- Cart Items -->
+            <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="16" Margin="0,0,0,10">
+                <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Cart Items" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                    <DataGrid x:Name="dgCart" Style="{StaticResource ModernDataGrid}"
+                              IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              CellEditEnding="DgCart_CellEditEnding"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Medicine" Binding="{Binding ProductName}" Width="Auto"  IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, Converter={StaticResource RawCurrencyConverter}}" Width="Auto"  IsReadOnly="True"/>
+                            <DataGridTemplateColumn Header="Packs" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Content="-" Width="26" Height="26" Click="DecreasePack_Click" Background="#E2E8F0" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="16"/>
+                                            <TextBox Text="{Binding Packs, UpdateSourceTrigger=PropertyChanged}" Width="36" TextAlignment="Center" VerticalAlignment="Center" Margin="2,0" FontWeight="SemiBold" Padding="0,4" Style="{StaticResource ModernTextBox}" PreviewTextInput="NumberValidation"/>
+                                            <Button Content="+" Width="26" Height="26" Click="IncreasePack_Click" Background="#E2E8F0" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="16"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Loose" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Content="-" Width="26" Height="26" Click="DecreaseLoose_Click" Background="#E2E8F0" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="16"/>
+                                            <TextBox Text="{Binding LooseUnits, UpdateSourceTrigger=PropertyChanged}" Width="36" TextAlignment="Center" VerticalAlignment="Center" Margin="2,0" FontWeight="SemiBold" Padding="0,4" Style="{StaticResource ModernTextBox}" PreviewTextInput="NumberValidation"/>
+                                            <Button Content="+" Width="26" Height="26" Click="IncreaseLoose_Click" Background="#E2E8F0" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="16"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tot Qty" Binding="{Binding TotalUnits}" Width="Auto"  IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Stk" Binding="{Binding AvailableStock}" Width="Auto"  IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total" Binding="{Binding Total, Converter={StaticResource RawCurrencyConverter}}" Width="Auto"  IsReadOnly="True"/>
+                            <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="X" FontSize="13" Foreground="#E53935"
+                                                Background="Transparent" BorderThickness="0"
+                                                Cursor="Hand" Click="RemoveItem_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <!-- Today's Sales -->
+            <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="16">
+                <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <TextBlock Text="Today's Sales" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <WrapPanel HorizontalAlignment="Right">
+                            <TextBlock Text="Total:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblTodayTotal" Text="Rs 0" FontSize="13" FontWeight="Bold" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Profit:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblTodayProfit" Text="Rs 0" FontSize="13" FontWeight="Bold"
+                                       Foreground="{StaticResource SuccessBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Due:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblTodayDue" Text="Rs 0" FontSize="13" FontWeight="Bold"
+                                       Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center"/>
+                        </WrapPanel>
+                    </Grid>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <DataGrid x:Name="dgTodaySales" Style="{StaticResource ModernDataGrid}"
+                                  IsReadOnly="True" CanUserAddRows="False"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Invoice" Binding="{Binding InvoiceNo}" Width="Auto" />
+                                <DataGridTextColumn Header="Customer" Binding="{Binding Customer.Name}" Width="Auto" />
+                                <DataGridTextColumn Header="SubTotal" Binding="{Binding SubTotal, StringFormat=Rs {0:N2}}" Width="Auto" />
+                                <DataGridTextColumn Header="Paid" Binding="{Binding PaidAmount, StringFormat=Rs {0:N2}}" Width="Auto" />
+                                <DataGridTemplateColumn Header="Due" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="SemiBold" Margin="4,0" HorizontalAlignment="Right">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding DueAmount, StringFormat=Rs {0:N2}}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DueAmount}" Value="0">
+                                                                <Setter Property="Text" Value="Clear"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Time" Binding="{Binding Date, StringFormat=hh:mm tt}" Width="Auto"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- RIGHT: Professional Billing Panel -->
+        <Border Grid.Column="1" Background="White" CornerRadius="14" Padding="0">
+            <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="10" Opacity="0.09"/></Border.Effect>
+            <DockPanel>
+                <!-- Header -->
+                <Border DockPanel.Dock="Top" CornerRadius="14,14,0,0" Padding="20,14">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1A73E8" Offset="0"/>
+                            <GradientStop Color="#0D47A1" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel>
+                        <TextBlock Text="Billing" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock x:Name="lblBillingDateTime"
+                                   FontSize="11" Foreground="#AACCFF" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="16,12,16,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="btnSaveOnly" Grid.Column="0" Content="Save Invoice"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="SaveOnly_Click" Height="50" FontSize="14" IsEnabled="False"/>
+                        <Button x:Name="btnSavePrint" Grid.Column="2" Content="Save &amp; Print"
+                                Style="{StaticResource SuccessButton}"
+                                Click="SaveAndPrint_Click" Height="50" FontSize="14" IsEnabled="False"/>
+                    </Grid>
+                    <Button Content="Clear Cart" Style="{StaticResource DangerButton}"
+                            Click="ClearCart_Click" Height="36" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <!-- Scrollable Billing Form -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">
+                    <StackPanel>
+                        <!-- Transaction Type -->
+                        <TextBlock Text="Transaction Type" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbTransType" Style="{StaticResource ModernComboBox}" Height="38"
+                                  Margin="0,0,0,14" SelectionChanged="CmbTransType_SelectionChanged">
+                            <ComboBoxItem Content="Sale" IsSelected="True"/>
+                        </ComboBox>
+
+                        <!-- Customer -->
+                        <TextBlock Text="Customer" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="cmbCustomer" Style="{StaticResource ModernComboBox}"
+                                      DisplayMemberPath="Name" SelectedValuePath="Id" Height="38"
+                                      SelectionChanged="CmbCustomer_SelectionChanged"/>
+                            <Button Grid.Column="1" Content="Pay" ToolTip="Record Payment"
+                                    Style="{StaticResource AccentButton}"
+                                    Margin="8,0,0,0" Height="38" Padding="12,0" Click="RecordCustomerPayment_Click"/>
+                            <Button Grid.Column="2" Content="History" ToolTip="View History"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Margin="8,0,0,0" Height="38" Padding="12,0" Click="ViewCustomerHistory_Click"/>
+                        </Grid>
+
+                        <!-- Customer Balance Badge -->
+                        <Border x:Name="borderCustBalance" CornerRadius="8" Padding="12,8" Margin="0,0,0,14"
+                                Cursor="Hand" MouseLeftButtonDown="BalanceLabel_MouseDown" Visibility="Collapsed">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#FFEBEE"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=lblPreviousBalance, Path=Tag}" Value="Credit">
+                                            <Setter Property="Background" Value="#E8F5E9"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <TextBlock x:Name="lblBalanceType" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{StaticResource DangerBrush}"/>
+                                <TextBlock x:Name="lblPreviousBalance" Text="Rs 0"
+                                           HorizontalAlignment="Right" FontSize="13" FontWeight="Bold"
+                                           Foreground="{StaticResource DangerBrush}" TextDecorations="Underline"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,14"/>
+
+                        <!-- Sub Total -->
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock Text="Sub Total" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="lblSubTotal" Text="Rs 0.00" HorizontalAlignment="Right"
+                                       FontSize="13" FontWeight="SemiBold"/>
+                        </Grid>
+
+                        <!-- Tax (hidden if 0) -->
+                        <Grid Margin="0,0,0,6" x:Name="gridTax" Visibility="Collapsed">
+                            <TextBlock x:Name="lblTaxLabel" Text="Tax (0%):" FontSize="12"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="lblTaxAmount" Text="Rs 0.00" HorizontalAlignment="Right"
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </Grid>
+
+                        <!-- Discount -->
+                        <TextBlock Text="Discount (Rs or %)" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,4"/>
+                        <TextBox x:Name="txtDiscount" Style="{StaticResource ModernTextBox}"
+                                 Tag="e.g. 50 or 10%" Height="38" FontSize="14" Padding="8,0" VerticalContentAlignment="Center"
+                                 TextChanged="Calculation_Changed" PreviewTextInput="NumberValidation" Margin="0,0,0,10"/>
+
+                        <!-- Net Amount -->
+                        <Border Background="{StaticResource PrimaryLightBrush}" CornerRadius="8" Padding="12,8" Margin="0,0,0,10">
+                            <Grid>
+                                <TextBlock Text="Net Amount" FontSize="14" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                                <TextBlock x:Name="lblNetAmount" Text="Rs 0.00"
+                                           HorizontalAlignment="Right" FontSize="14" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Credit Applied (visible when credit balance) -->
+                        <Grid Margin="0,0,0,6" x:Name="gridAdvance" Visibility="Collapsed">
+                            <TextBlock Text="Credit Applied:" FontSize="13" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="lblAdvanceAmount" Text="- Rs 0.00"
+                                       HorizontalAlignment="Right" FontSize="13"
+                                       Foreground="{StaticResource SuccessBrush}" FontWeight="Bold"/>
+                        </Grid>
+
+                        <!-- Previous Dues (visible when dues > 0) -->
+                        <Grid Margin="0,0,0,6" x:Name="gridPreviousDues" Visibility="Collapsed"
+                              Cursor="Hand" MouseLeftButtonDown="BalanceLabel_MouseDown" ToolTip="Click to view history">
+                            <TextBlock Text="Previous Dues:" FontSize="13" Foreground="{StaticResource DangerBrush}"
+                                       TextDecorations="Underline" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="lblPreviousDuesVal" Text="Rs 0.00"
+                                       HorizontalAlignment="Right" FontSize="13" FontWeight="Bold"
+                                       Foreground="{StaticResource DangerBrush}"/>
+                        </Grid>
+
+                        <!-- Total Payable -->
+                        <Border x:Name="borderBal" Height="1" Background="{StaticResource BorderBrush}"
+                                Margin="0,4,0,8" Visibility="Collapsed"/>
+
+                        <Border x:Name="gridFinalBal" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#E3F2FD" Offset="0"/>
+                                    <GradientStop Color="#F3E5F5" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid>
+                                <TextBlock Text="Total to Pay:" FontSize="16" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                                <TextBlock x:Name="lblGrandTotal" Text="Rs 0.00"
+                                           HorizontalAlignment="Right" FontSize="18" FontWeight="Bold"
+                                           Foreground="{StaticResource PrimaryBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Payment Action -->
+                        <TextBlock Text="Payment Action" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbPaymentAction" Style="{StaticResource ModernComboBox}" Height="38"
+                                  Margin="0,0,0,14" SelectionChanged="CmbPaymentAction_SelectionChanged">
+                            <ComboBoxItem Content="Amount Received from Customer" Tag="Pays" IsSelected="True"/>
+                            <ComboBoxItem Content="Refund Given to Customer" Tag="Refunds"/>
+                        </ComboBox>
+
+                        <!-- Amount Paid / Refunded -->
+                        <TextBlock x:Name="lblPaymentAmount" Text="Amount Received" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <TextBox x:Name="txtPaidAmount" Style="{StaticResource ModernTextBox}"
+                                 Tag="Enter amount..." Height="42" FontSize="15"
+                                 TextChanged="Calculation_Changed" PreviewTextInput="NumberValidation" KeyDown="txtPaidAmount_KeyDown" Margin="0,0,0,12"/>
+
+                        <!-- chkReturnChange kept in markup (Collapsed) for legacy; overpayment is now handled via OverpaymentDialog -->
+                        <CheckBox x:Name="chkReturnChange" Content="Return Change to Customer" IsChecked="True" 
+                                  Visibility="Collapsed" Margin="0,0,0,10"
+                                  Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+
+                        <!-- Change to Return / Credit Added -->
+                        <Border x:Name="gridChange" CornerRadius="8" Padding="12,8" Background="#E8F5E9"
+                                Margin="0,0,0,6" Visibility="Collapsed">
+                            <Grid>
+                                <TextBlock Text="Change to Return:" FontSize="13"
+                                           Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="lblChange" Text="Rs 0.00" HorizontalAlignment="Right"
+                                           FontSize="14" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="gridNewDues" CornerRadius="8" Padding="12,8" Background="#FFEBEE"
+                                Margin="0,0,0,6" Visibility="Collapsed">
+                            <Grid>
+                                <TextBlock x:Name="lblDuePrefix" Text="Remaining Due:" FontSize="13"
+                                           Foreground="{StaticResource DangerBrush}" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="lblDue" Text="Rs 0.00" HorizontalAlignment="Right"
+                                           FontSize="14" FontWeight="Bold" Foreground="{StaticResource DangerBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Added to Advance Credit -->
+                        <Border x:Name="gridAdvanceAdded" CornerRadius="8" Padding="12,8" Background="#E8F5E9"
+                                Margin="0,0,0,6" Visibility="Collapsed">
+                            <Grid>
+                                <TextBlock Text="Added to Advance Balance:" FontSize="13"
+                                           Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="lblAdvanceAdded" Text="Rs 0.00" HorizontalAlignment="Right"
+                                           FontSize="14" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="(will be added to customer's account)" FontSize="10" FontStyle="Italic"
+                                   Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right"
+                                   x:Name="lblDueHint" Visibility="Collapsed" Margin="0,-2,0,4"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Page>
+
+
+

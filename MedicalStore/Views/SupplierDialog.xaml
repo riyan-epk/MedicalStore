@@ -1,0 +1,33 @@
+<Window x:Class="MedicalStore.Views.SupplierDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Supplier Details" SizeToContent="Height" Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" Background="{StaticResource BgPrimaryBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Background="White" CornerRadius="12" Margin="16" Padding="24">
+            <StackPanel>
+                <TextBlock x:Name="lblTitle" Text="Add Supplier" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                
+                <TextBlock Text="Name *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                <TextBox x:Name="txtName" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+                
+                <TextBlock Text="Phone" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                <TextBox x:Name="txtPhone" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+                
+                <TextBlock Text="Address" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                <TextBox x:Name="txtAddress" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+                <TextBlock Text="Balance" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                <TextBox x:Name="txtBalance" Style="{StaticResource ModernTextBox}" Margin="0,0,0,20" Text="0" PreviewTextInput="NumberValidation"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Style="{StaticResource DangerButton}" Click="Cancel_Click" Width="100" Margin="0,0,12,0"/>
+                    <Button Content="Save" Style="{StaticResource PrimaryButton}" Click="Save_Click" Width="100"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</Window>
+
+
+

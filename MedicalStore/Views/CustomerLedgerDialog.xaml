@@ -1,0 +1,109 @@
+<Window x:Class="MedicalStore.Views.CustomerLedgerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Customer Ledger History" Height="620" Width="880"
+        WindowStartupLocation="CenterOwner" Background="{StaticResource BgPrimaryBrush}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Header: name + balance -->
+            <RowDefinition Height="Auto"/>  <!-- Filter bar -->
+            <RowDefinition Height="*"/>     <!-- DataGrid -->
+            <RowDefinition Height="Auto"/>  <!-- Close button -->
+        </Grid.RowDefinitions>
+
+        <!-- Header: customer name + balance badge (no overlap) -->
+        <Border Grid.Row="0" Background="White" CornerRadius="10" Padding="16,12" Margin="0,0,0,12">
+            <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Customer name -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock x:Name="lblCustomerName"
+                               FontSize="20" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Customer Ledger &amp; Transaction History"
+                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <!-- Balance badge -->
+                <Border Grid.Column="1" CornerRadius="8" Padding="16,8" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#E8F5E9"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=lblCurrentBalance, Path=Tag}" Value="Due">
+                                    <Setter Property="Background" Value="#FFEBEE"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock Text="Current Balance" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="lblCurrentBalance"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Filter / info bar -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Ledger History" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <TextBlock Text="(Sales, Returns, and Payments)" FontSize="11"
+                           VerticalAlignment="Center" Margin="8,0,0,0"
+                           Foreground="{StaticResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Ledger DataGrid -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="8">
+            <DataGrid x:Name="dgLedger" Style="{StaticResource ModernDataGrid}"
+                      IsReadOnly="True" AutoGenerateColumns="False" RowHeight="36"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Date"      Binding="{Binding Date, StringFormat=dd/MM/yyyy HH:mm}" Width="Auto"/>
+                    <DataGridTextColumn Header="Type"      Binding="{Binding Type}"                                Width="Auto"/>
+                    <DataGridTextColumn Header="Reference" Binding="{Binding Reference}"                           Width="Auto"/>
+                    <DataGridTextColumn Header="Debit"     Binding="{Binding Debit,  Converter={StaticResource CurrencyConverter}}" Width="Auto">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="Foreground" Value="#C62828"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Credit"    Binding="{Binding Credit, Converter={StaticResource CurrencyConverter}}" Width="Auto">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="Foreground" Value="#2E7D32"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Running Balance" Binding="{Binding BalanceAfter, Converter={StaticResource CurrencyConverter}}" Width="Auto">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Button Grid.Row="3" Content="Close" Style="{StaticResource PrimaryButton}"
+                HorizontalAlignment="Right" Width="100" Margin="0,14,0,0" IsCancel="True"/>
+    </Grid>
+</Window>
+
+
+
+

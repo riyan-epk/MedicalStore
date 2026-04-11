@@ -1,0 +1,357 @@
+<Page x:Class="MedicalStore.Views.PurchaseView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Purchases" Background="{StaticResource BgPrimaryBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Stats Bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="16" Margin="0,0,6,0">
+                    <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Purchases Today" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock x:Name="lblTodayCount" Text="0" FontSize="22" FontWeight="Bold" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16" Margin="6,0,6,0">
+                    <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Amount Today" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock x:Name="lblTodayAmount" Text="Rs 0" FontSize="22" FontWeight="Bold"
+                                   Foreground="{StaticResource PrimaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="16" Margin="6,0,0,0">
+                    <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Manage Suppliers" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <Button Content="Add Supplier" Style="{StaticResource PrimaryButton}"
+                                Height="30" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                Click="AddSupplier_Click" Cursor="Hand" Padding="8,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- New Purchase Form -->
+            <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="New Purchase Entry" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                    <!-- Row 1: Supplier + Product -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Supplier -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Supplier" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="+" Width="38" Height="38"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        Background="White" Margin="4,0,0,0"
+                                        Click="AddSupplierInline_Click" ToolTip="Add New Supplier" Cursor="Hand"/>
+                                <ComboBox x:Name="cmbSupplier" DisplayMemberPath="Name" IsEditable="True"
+                                          SelectedValuePath="Id" Height="38" FontSize="13" Padding="8,6"
+                                          SelectionChanged="CmbSupplier_SelectionChanged"/>
+                            </DockPanel>
+                            <TextBlock x:Name="lblSupplierBalance" Text="" FontSize="11"
+                                       Foreground="{StaticResource DangerBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Product -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Product / Medicine" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="+" Width="38" Height="38"
+                                        BorderBrush="{StaticResource PrimaryBrush}"
+                                        Foreground="{StaticResource PrimaryBrush}"
+                                        Background="White" Margin="4,0,0,0"
+                                        Click="AddProductInline_Click" ToolTip="Add New Product" Cursor="Hand"/>
+                                <ComboBox x:Name="cmbProduct" IsEditable="True" TextSearch.TextPath="Name"
+                                          SelectedValuePath="Id" Height="38" FontSize="13" Padding="8,6"
+                                          SelectionChanged="CmbProduct_SelectionChanged">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                           Width="160" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Category.Name}" FontSize="11"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 2: Pack Calculation Fields (ALWAYS visible) -->
+                    <Border Background="#F3F6FF" CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Quantity Calculation" FontSize="12" FontWeight="Bold"
+                                       Foreground="{StaticResource PrimaryBrush}" Margin="0,0,0,10"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Number of Packs -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="No. of Packs" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtNumberOfPacks" Style="{StaticResource ModernTextBox}"
+                                             Tag="e.g. 5" PreviewTextInput="NumberValidation"
+                                             TextChanged="PackCalc_Changed"
+                                             ToolTip="Number of packs/strips/boxes purchased. Leave blank to enter quantity directly."/>
+                                </StackPanel>
+
+                                <!-- Units Per Pack -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Units / Pack" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtUnitsPerPack" Style="{StaticResource ModernTextBox}"
+                                             Tag="e.g. 10" PreviewTextInput="NumberValidation"
+                                             TextChanged="PackCalc_Changed"
+                                             ToolTip="How many tablets/capsules per pack. Leave blank to enter quantity directly."/>
+                                </StackPanel>
+
+                                <!-- Pack Price -->
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Pack Price (Rs)" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtPackPrice" Style="{StaticResource ModernTextBox}"
+                                             Tag="Price per pack" PreviewTextInput="NumberValidation"
+                                             TextChanged="PackCalc_Changed"
+                                             ToolTip="Purchase price per pack. System will auto-calculate unit price."/>
+                                </StackPanel>
+
+                                <!-- Arrow -->
+                                <TextBlock Grid.Column="6" Text="" FontSize="20" VerticalAlignment="Bottom"
+                                           Foreground="{StaticResource PrimaryBrush}" Margin="0,0,0,6"/>
+
+                                <!-- Calculated Quantity (editable fallback) -->
+                                <StackPanel Grid.Column="8">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="Total Qty (units)" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="lblQtyNote" Text=" " FontSize="11"
+                                                   Foreground="#5c7cfa"
+                                                   ToolTip="Auto-filled from Packs Units/Pack. You can also edit directly."/>
+                                    </StackPanel>
+                                    <TextBox x:Name="txtTotalQty" Style="{StaticResource ModernTextBox}"
+                                             Tag="Auto or manual" PreviewTextInput="NumberValidation"
+                                             TextChanged="TotalQty_Changed"
+                                             ToolTip="Auto-calculated from No. of Packs Units/Pack. Edit directly if not using pack fields."/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Derived values info bar -->
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Background="White" CornerRadius="6" Padding="10,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Unit Purchase Price: " FontSize="11"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="lblCalcUnitPrice" Text="" FontSize="11"
+                                                   FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="White" CornerRadius="6" Padding="10,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Total Units: " FontSize="11"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="lblCalcTotalUnits" Text="" FontSize="11"
+                                                   FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="4" Background="White" CornerRadius="6" Padding="10,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Line Total: " FontSize="11"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock x:Name="lblCalcLineTotal" Text="" FontSize="11"
+                                                   FontWeight="Bold" Foreground="{StaticResource DangerBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Row 3: Unit Cost (manual) + Sale Price + Add Button -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="Unit Purchase Price" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text=" (Rs)" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <TextBox x:Name="txtUnitCost" Style="{StaticResource ModernTextBox}"
+                                     Tag="Per-unit cost" PreviewTextInput="NumberValidation"
+                                     TextChanged="UnitCost_Changed"
+                                     ToolTip="Auto-filled from Pack Price Units/Pack. You can override this."/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="New Sale Price (Rs)" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="txtNewSalePrice" Style="{StaticResource ModernTextBox}"
+                                     Tag="Optional override" PreviewTextInput="NumberValidation"
+                                     ToolTip="Optional: if set, updates the product's sale price on stock-in."/>
+                        </StackPanel>
+
+                        <Button Grid.Column="4" Content="Add to List" Style="{StaticResource PrimaryButton}"
+                                Height="38" Padding="18,0" VerticalAlignment="Bottom"
+                                Click="AddPurchaseItem_Click" Cursor="Hand"/>
+                    </Grid>
+
+                    <!-- Purchase Items Cart -->
+                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                            Margin="0,0,0,12">
+                        <DataGrid x:Name="dgPurchaseItems" Style="{StaticResource ModernDataGrid}"
+                                  Height="160" Margin="0" CanUserDeleteRows="False"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Packs" Binding="{Binding NumberOfPacks}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Units/Pack" Binding="{Binding UnitsPerPack}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Total Units" Binding="{Binding TotalUnits}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Pack Price" Binding="{Binding PackPrice, StringFormat=Rs {0:N2}}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=Rs {0:N2}}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=Rs {0:N2}}" Width="Auto" IsReadOnly="True"/>
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="X" FontSize="12" Foreground="#E53935"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Cursor="Hand" Click="RemovePurchaseItem_Click"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Footer: Total + Amount Paid + Save -->
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="Amount Paid to Supplier" FontSize="11"
+                                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtPaidAmount" Style="{StaticResource ModernTextBox}"
+                                         Tag="Rs 0" Width="180" Text="0" PreviewTextInput="NumberValidation"/>
+                            </StackPanel>
+                            <Button Content="Save Purchase" Style="{StaticResource SuccessButton}"
+                                    Height="38" Padding="18,0" VerticalAlignment="Bottom"
+                                    Click="SavePurchase_Click" Cursor="Hand"/>
+                        </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="lblPurchaseTotal" Text="Total: Rs 0.00"
+                                       FontSize="20" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock x:Name="lblItemCount" Text="0 items"
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- History Grids -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Recently Purchased Items -->
+                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="16" MinHeight="280">
+                    <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Recently Purchased"
+                                   FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <DataGrid x:Name="dgRecentItems" Style="{StaticResource ModernDataGrid}"
+                                  IsReadOnly="True" MinHeight="220" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date"    Binding="{Binding Purchase.Date, StringFormat=dd/MM}" Width="Auto"/>
+                                <DataGridTextColumn Header="Product" Binding="{Binding Product.Name}" Width="Auto"/>
+                                <DataGridTextColumn Header="Packs"   Binding="{Binding PackQty}" Width="Auto"/>
+                                <DataGridTextColumn Header="Units"   Binding="{Binding TotalUnits}" Width="Auto"/>
+                                <DataGridTextColumn Header="Unit Rs" Binding="{Binding UnitPrice, StringFormat={}{0:N2}}" Width="Auto"/>
+                                <DataGridTextColumn Header="Total"   Binding="{Binding Total, StringFormat=Rs {0:N0}}" Width="Auto"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+
+                <!-- Purchase Invoices -->
+                <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="16" MinHeight="280">
+                    <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Purchase Invoices"
+                                   FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <DataGrid x:Name="dgPurchaseHistory" Style="{StaticResource ModernDataGrid}"
+                                  IsReadOnly="True" MinHeight="220" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date"     Binding="{Binding Date, StringFormat=dd/MM/yyyy}" Width="Auto"/>
+                                <DataGridTextColumn Header="Supplier" Binding="{Binding Supplier.Name}" Width="Auto"/>
+                                <DataGridTextColumn Header="Total"    Binding="{Binding TotalAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
+                                <DataGridTextColumn Header="Paid"     Binding="{Binding PaidAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
+                                <DataGridTextColumn Header="Due"      Binding="{Binding DueAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</Page>
+
+
+

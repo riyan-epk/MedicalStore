@@ -1,0 +1,113 @@
+<Page x:Class="MedicalStore.Views.SuppliersView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Suppliers" Background="{StaticResource BgPrimaryBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Suppliers" FontSize="22" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Manage supplier accounts, payments and purchase history"
+                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="14,12" Margin="0,0,0,12">
+            <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBox x:Name="txtSearch" Style="{StaticResource ModernTextBox}"
+                             Width="280" Tag="Search by name or phone..."
+                             TextChanged="txtSearch_TextChanged"/>
+                    <TextBlock x:Name="lblSupCount" VerticalAlignment="Center" Margin="12,0,0,0"
+                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="History"  Style="{StaticResource PrimaryButton}" Height="36"
+                            Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="ViewHistory_Click"/>
+                    <Button Content="Pay"      Style="{StaticResource AccentButton}"  Height="36"
+                            Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="RecordPayment_Click"/>
+                    <Button Content="Edit"     Style="{StaticResource PrimaryButton}" Height="36"
+                            Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="EditSupplier_Click"/>
+                    <Button Content="Add New"  Style="{StaticResource SuccessButton}" Height="36"
+                            Padding="14,0" FontSize="12" Click="AddSupplier_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Supplier Table -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="16">
+            <Border.Effect><DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/></Border.Effect>
+            <DataGrid x:Name="dgSuppliers" Style="{StaticResource ModernDataGrid}"
+                      MouseDoubleClick="dgSuppliers_DoubleClick"
+                      HorizontalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name"    Binding="{Binding Name}"    Width="*" />
+                    <DataGridTextColumn Header="Phone"   Binding="{Binding Phone}"   Width="Auto" />
+                    <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="*" />
+                    <!-- Balance column: red if positive, green if 0 -->
+                    <DataGridTemplateColumn Header="Balance Due" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="5" Padding="8,3" Margin="4,4" HorizontalAlignment="Right">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Balance}" Value="0">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock FontWeight="Bold" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="{Binding Balance, StringFormat=Rs {0:N2}}"/>
+                                                <Setter Property="Foreground" Value="#C62828"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Balance}" Value="0">
+                                                        <Setter Property="Text" Value="Settled"/>
+                                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Actions" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Delete" Style="{StaticResource DangerButton}" Height="26"
+                                        FontSize="12" Padding="6,0" Cursor="Hand" Click="DeleteSupplier_Click"
+                                        ToolTip="Delete Supplier"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</Page>
+
+
+

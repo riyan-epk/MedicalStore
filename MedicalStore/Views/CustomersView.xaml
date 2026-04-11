@@ -1,0 +1,89 @@
+<Page x:Class="MedicalStore.Views.CustomersView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Customers" Background="{StaticResource BgPrimaryBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Customers" FontSize="16" FontWeight="SemiBold" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <TextBox x:Name="txtSearch" Style="{StaticResource ModernTextBox}" Width="250" Tag="Search..." TextChanged="txtSearch_TextChanged"/>
+                </StackPanel>
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Show Dues" Style="{StaticResource DangerButton}" Click="ShowDues_Click" Margin="4,2"/>
+                    <Button Content="History" Style="{StaticResource PrimaryButton}" Click="ViewHistory_Click" Margin="4,2"/>
+                    <Button Content="Pay" Style="{StaticResource AccentButton}" Click="RecordPayment_Click" Margin="4,2"/>
+                    <Button Content="Add" Style="{StaticResource PrimaryButton}" Click="AddCustomer_Click" Margin="4,2"/>
+                    <Button Content="Delete All" Style="{StaticResource DangerButton}" Click="DeleteAllCustomers_Click" Margin="4,2"/>
+                </WrapPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Customer Grid -->
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="16">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.06"/>
+            </Border.Effect>
+            <DataGrid x:Name="dgCustomers" Style="{StaticResource ModernDataGrid}" MouseDoubleClick="dgCustomers_DoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="Auto"/>
+                    <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="*"/>
+                    <DataGridTextColumn Header="Net Balance" Width="Auto">
+                        <DataGridTextColumn.Binding>
+                            <Binding Path="Balance" Converter="{StaticResource CurrencyConverter}"/>
+                        </DataGridTextColumn.Binding>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Balance, Converter={StaticResource BalanceToColorConverter}}" Value="Debt">
+                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Balance, Converter={StaticResource BalanceToColorConverter}}" Value="Advance">
+                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Walk-in" Binding="{Binding IsWalkIn}" Width="Auto"/>
+                    <DataGridTemplateColumn Header="Actions" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Delete" Height="26" FontSize="11" Click="DeleteCustomer_Click" Padding="4,0" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsWalkIn}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</Page>
+
+
+

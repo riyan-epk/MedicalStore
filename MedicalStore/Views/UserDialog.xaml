@@ -1,0 +1,42 @@
+<Window x:Class="MedicalStore.Views.UserDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="User Details" Height="580" Width="450"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" Background="{StaticResource BgPrimaryBrush}">
+    <Border Background="White" CornerRadius="12" Margin="16" Padding="24">
+        <StackPanel>
+            <TextBlock x:Name="lblTitle" Text="Add User" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Username *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="txtUsername" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="Full Name *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+            <TextBox x:Name="txtFullName" Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+
+            <TextBlock x:Name="lblPassword" Text="Password *" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+            <PasswordBox x:Name="txtPassword" Style="{StaticResource ModernPasswordBox}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="Role" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="cmbRole" Height="27" FontSize="14" Padding="8,6" Margin="0,0,0,12">
+                <ComboBoxItem Content="Admin" Tag="Admin"/>
+                <ComboBoxItem Content="Cashier" Tag="Cashier"/>
+                <ComboBoxItem Content="Manager" Tag="Manager"/>
+            </ComboBox>
+
+            <CheckBox x:Name="chkActive" Content="Active" FontSize="13" IsChecked="True" Margin="0,0,0,12" Height="22"/>
+
+            <StackPanel x:Name="pnlResetPassword" Orientation="Horizontal" Margin="0,0,0,12" Visibility="Collapsed">
+                <Button Content="Reset Password" Style="{StaticResource AccentButton}" Click="ResetPassword_Click"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Style="{StaticResource DangerButton}" Click="Cancel_Click" Width="100" Margin="0,0,12,0"/>
+                <Button Content="Save" Style="{StaticResource PrimaryButton}" Click="Save_Click" Width="100"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
+
+
+
