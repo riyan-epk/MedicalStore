@@ -20,6 +20,11 @@ namespace MedicalStore.DAL.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; } // Positive = customer owes us
 
+        // Starting balance when the customer was first added to the system
+        // (e.g. an existing debtor being onboarded). Included in Balance and ledgers.
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OpeningBalance { get; set; }
+
         public bool IsWalkIn { get; set; }
 
         public bool IsActive { get; set; } = true;

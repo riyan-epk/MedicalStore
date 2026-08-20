@@ -491,7 +491,8 @@ namespace MedicalStore.Views
                 extraReceived,
                 salesAdjustment,
                 replaced.Any() ? "Replace" : "Refund",
-                txtReturnNotes.Text);
+                txtReturnNotes.Text,
+                chkRestock.IsChecked == true);
 
             if (result.Success && result.Return != null)
             {

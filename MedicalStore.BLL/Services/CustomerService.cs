@@ -29,8 +29,12 @@ namespace MedicalStore.BLL.Services
             using var db = new AppDbContext();
             customer.CreatedAt = DateTime.Now;
             customer.IsActive = true;
+            // The running balance starts at the opening balance (existing debtor onboarding).
+            customer.Balance = customer.OpeningBalance;
             db.Customers.Add(customer);
             db.SaveChanges();
+            if (customer.OpeningBalance != 0)
+                AuditService.Log("Opening Balance", "Customer", customer.Id, $"Opening balance set to {customer.OpeningBalance:N2}");
             return (true, "Customer added successfully.");
         }
 
@@ -43,6 +47,17 @@ namespace MedicalStore.BLL.Services
             existing.Name = customer.Name;
             existing.Phone = customer.Phone;
             existing.Address = customer.Address;
+
+            // Editing the opening balance adjusts the current balance by the same delta.
+            if (customer.OpeningBalance != existing.OpeningBalance)
+            {
+                decimal delta = customer.OpeningBalance - existing.OpeningBalance;
+                existing.Balance += delta;
+                AuditService.Log("Opening Balance", "Customer", existing.Id,
+                    $"Opening {existing.OpeningBalance:N2} -> {customer.OpeningBalance:N2}");
+                existing.OpeningBalance = customer.OpeningBalance;
+            }
+
             db.SaveChanges();
             return (true, "Customer updated successfully.");
         }
@@ -201,6 +216,8 @@ namespace MedicalStore.BLL.Services
 
                 db.SaveChanges();
                 tx.Commit();
+                AuditService.Log("Customer Payment", "Customer", customerId,
+                    $"Received Rs {amount:N2}. New balance Rs {customer.Balance:N2}. {notes}");
                 return (true, $"Payment of Rs {amount:N2} recorded successfully.");
             }
             catch (Exception ex)
@@ -219,16 +236,41 @@ namespace MedicalStore.BLL.Services
             var returns = db.Returns.Where(r => r.CustomerId == customerId).ToList();
             var payments = db.Payments.Where(p => p.CustomerId == customerId).ToList();
 
+            // Sale is a pure debit (what the customer owes). Cash paid – whether at the
+            // counter or later – is recorded separately as Payment rows, so crediting
+            // s.PaidAmount here would double-count the money and desync the running balance
+            // from Customer.Balance.
             foreach (var s in sales)
-                ledger.Add(new MedicalStore.Common.Models.LedgerEntry { Date = s.Date, Type = "Sale", Reference = s.InvoiceNo, Debit = s.NetAmount, Credit = s.PaidAmount, Notes = "POS Sale" });
+                ledger.Add(new MedicalStore.Common.Models.LedgerEntry { Date = s.Date, Type = "Sale", Reference = s.InvoiceNo, Debit = s.NetAmount, Credit = 0, Notes = "POS Sale" });
 
+            // The goods movement (returned/replacement value) is already baked into the
+            // linked Sale's NetAmount above. The only extra ledger effect of a return is the
+            // cash refunded to the customer (money out → increases receivable → debit).
             foreach (var r in returns)
-                ledger.Add(new MedicalStore.Common.Models.LedgerEntry { Date = r.Date, Type = r.ReturnType, Reference = $"RET-{r.Id}", Debit = r.ReplaceAmount, Credit = r.TotalAmount + r.RefundAmount, Notes = r.Notes });
+                ledger.Add(new MedicalStore.Common.Models.LedgerEntry { Date = r.Date, Type = r.ReturnType, Reference = $"RET-{r.Id}", Debit = r.RefundAmount, Credit = 0, Notes = r.Notes });
 
             foreach (var p in payments)
                 ledger.Add(new MedicalStore.Common.Models.LedgerEntry { Date = p.Date, Type = "Payment", Reference = $"PAY-{p.Id}", Debit = 0, Credit = p.Amount, Notes = p.Notes });
 
+            var customer = db.Customers.Find(customerId);
+            decimal opening = customer?.OpeningBalance ?? 0;
+
             var sorted = ledger.OrderBy(l => l.Date).ToList();
+
+            // Seed the running balance with the opening balance and show it as the first row.
+            if (opening != 0)
+            {
+                sorted.Insert(0, new MedicalStore.Common.Models.LedgerEntry
+                {
+                    Date = customer?.CreatedAt ?? DateTime.MinValue,
+                    Type = "Opening Balance",
+                    Reference = "OPEN",
+                    Debit = opening > 0 ? opening : 0,
+                    Credit = opening < 0 ? -opening : 0,
+                    Notes = "Opening balance"
+                });
+            }
+
             decimal runningBalance = 0;
             foreach (var entry in sorted)
             {

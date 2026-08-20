@@ -17,7 +17,7 @@ namespace MedicalStore.Views
                 txtName.Text = supplier.Name;
                 txtPhone.Text = supplier.Phone;
                 txtAddress.Text = supplier.Address;
-                txtBalance.Text = supplier.Balance.ToString("0.##");
+                txtBalance.Text = supplier.OpeningBalance.ToString("0.##");
             }
             else
             {
@@ -37,7 +37,7 @@ namespace MedicalStore.Views
             Supplier.Address = txtAddress.Text.Trim();
             
             if (decimal.TryParse(txtBalance.Text, out decimal bal))
-                Supplier.Balance = bal;
+                Supplier.OpeningBalance = bal;
 
             DialogResult = true;
             Close();

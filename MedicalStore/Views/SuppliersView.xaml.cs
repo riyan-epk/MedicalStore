@@ -137,6 +137,30 @@ namespace MedicalStore.Views
             }
         }
 
+        private void ReturnStock_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (dgSuppliers.SelectedItem is Supplier supplier)
+                {
+                    var dialog = new SupplierReturnDialog(supplier);
+                    dialog.Owner = Window.GetWindow(this);
+                    if (dialog.ShowDialog() == true)
+                    {
+                        LoadSuppliers(txtSearch.Text);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please select a supplier first.", "Selection Required");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error returning stock: {ex.Message}", "Error");
+            }
+        }
+
         private void ViewHistory_Click(object sender, RoutedEventArgs e)
         {
             try

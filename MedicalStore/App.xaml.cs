@@ -8,7 +8,7 @@ namespace MedicalStore
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            
+
             // Global Exception Handling
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
             

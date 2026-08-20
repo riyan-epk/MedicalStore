@@ -17,6 +17,7 @@ namespace MedicalStore.Views
                 txtName.Text = customer.Name;
                 txtPhone.Text = customer.Phone;
                 txtAddress.Text = customer.Address;
+                txtOpeningBalance.Text = customer.OpeningBalance.ToString("0.##");
             }
             else
             {
@@ -34,6 +35,8 @@ namespace MedicalStore.Views
             Customer.Name = txtName.Text.Trim();
             Customer.Phone = txtPhone.Text.Trim();
             Customer.Address = txtAddress.Text.Trim();
+            if (decimal.TryParse(txtOpeningBalance.Text, out decimal ob))
+                Customer.OpeningBalance = ob;
             DialogResult = true;
             Close();
         }

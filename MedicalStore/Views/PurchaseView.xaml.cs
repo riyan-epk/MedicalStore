@@ -83,6 +83,57 @@ namespace MedicalStore.Views
             lblTodayAmount.Text = todayList.Sum(p => p.TotalAmount).FormatRs();
         }
 
+        private void ReceivePurchase_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is MedicalStore.DAL.Entities.Purchase row)
+            {
+                if (row.Status == "Received")
+                {
+                    MessageBox.Show("This order is already fully received.", "Already Received");
+                    return;
+                }
+                if (row.Status == "Cancelled")
+                {
+                    MessageBox.Show("This order was cancelled.", "Cancelled");
+                    return;
+                }
+
+                // Reload with items included for the dialog.
+                var full = _purchaseService.GetPurchaseById(row.Id);
+                if (full == null) { MessageBox.Show("Purchase not found.", "Error"); return; }
+
+                var dialog = new ReceivePurchaseDialog(full) { Owner = Window.GetWindow(this) };
+                if (dialog.ShowDialog() == true)
+                {
+                    RefreshHistory();
+                    UpdateSupplierBalance();
+                }
+            }
+        }
+
+        private void CancelPurchase_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is MedicalStore.DAL.Entities.Purchase purchase)
+            {
+                var confirm = MessageBox.Show(
+                    $"Cancel this purchase from {purchase.Supplier?.Name}?\n\n" +
+                    $"Total: Rs {purchase.TotalAmount:N2}\n\n" +
+                    "This removes the received units from stock and reverses the unpaid supplier balance. " +
+                    "This cannot be undone.",
+                    "Cancel Purchase", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (confirm != MessageBoxResult.Yes) return;
+
+                var result = _purchaseService.CancelPurchase(purchase.Id);
+                MessageBox.Show(result.Message, result.Success ? "Done" : "Error",
+                    MessageBoxButton.OK, result.Success ? MessageBoxImage.Information : MessageBoxImage.Error);
+                if (result.Success)
+                {
+                    RefreshHistory();
+                    UpdateSupplierBalance();
+                }
+            }
+        }
+
         // Selection changed
         private void CmbSupplier_SelectionChanged(object sender, SelectionChangedEventArgs e)
             => UpdateSupplierBalance();
@@ -355,16 +406,27 @@ namespace MedicalStore.Views
                 UnitsPerPack: i.UnitsPerPack
             )).ToList();
 
-            var result = _purchaseService.CreatePurchase(
-                (int)cmbSupplier.SelectedValue, items, paidAmount, null);
+            bool orderOnly = chkOrderOnly?.IsChecked == true;
+
+            (bool Success, string Message) result;
+            if (orderOnly)
+            {
+                var r = _purchaseService.CreatePurchaseOrder((int)cmbSupplier.SelectedValue, items, null);
+                result = (r.Success, r.Message);
+            }
+            else
+            {
+                result = _purchaseService.CreatePurchase((int)cmbSupplier.SelectedValue, items, paidAmount, null);
+            }
 
             if (result.Success)
             {
                 // Apply sale price overrides if provided
                 ApplySalePriceOverrides();
 
-                MessageBox.Show(result.Message, "Purchase Saved",
+                MessageBox.Show(result.Message, orderOnly ? "Purchase Order Created" : "Purchase Saved",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+                if (chkOrderOnly != null) chkOrderOnly.IsChecked = false;
                 _cart.Clear();
                 UpdateCartTotals();
                 if (txtPaidAmount != null) txtPaidAmount.Text = "0";

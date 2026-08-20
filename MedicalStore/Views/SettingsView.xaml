@@ -142,7 +142,8 @@
                         </Border>
                         
                         <Button Content="Backup Now" Style="{StaticResource SuccessButton}" Click="Backup_Click" Height="46" Margin="0,0,0,16"/>
-                        <Button Content="Restore Data" Style="{StaticResource DangerButton}" Click="Restore_Click" Height="46"/>
+                        <Button Content="Restore Data" Style="{StaticResource DangerButton}" Click="Restore_Click" Height="46" Margin="0,0,0,16"/>
+                        <Button Content="View Audit Log" Style="{StaticResource PrimaryButton}" Click="ViewAuditLog_Click" Height="46"/>
                     </StackPanel>
                 </Border>
             </Grid>

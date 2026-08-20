@@ -32,14 +32,14 @@ namespace MedicalStore.BLL.Services
             foreach (var s in sales)
             {
                 var productList = string.Join(", ", s.Items.Select(i => $"{i.Product?.Name} (x{i.Quantity})"));
-                ledger.Add(new LedgerEntry 
-                { 
-                    Date = s.Date, 
-                    Type = "Sale", 
-                    Reference = s.InvoiceNo, 
-                    Debit = s.NetAmount, 
-                    Credit = s.PaidAmount, 
-                    Notes = productList 
+                ledger.Add(new LedgerEntry
+                {
+                    Date = s.Date,
+                    Type = "Sale",
+                    Reference = s.InvoiceNo,
+                    Debit = s.NetAmount,
+                    Credit = 0, // cash is recorded via Payment rows – see CustomerService.GetLedger
+                    Notes = productList
                 });
             }
 
@@ -50,14 +50,14 @@ namespace MedicalStore.BLL.Services
                     ? " | Replaced with: " + string.Join(", ", r.ReplacementItems.Select(i => $"{i.Product?.Name} (x{i.Quantity})")) 
                     : "";
                 
-                ledger.Add(new LedgerEntry 
-                { 
-                    Date = r.Date, 
-                    Type = r.ReturnType, 
-                    Reference = $"RET-{r.Id}", 
-                    Debit = r.ReplaceAmount, 
-                    Credit = r.TotalAmount + r.RefundAmount, 
-                    Notes = $"Returned: {returnedProducts}{replacementProducts}" 
+                ledger.Add(new LedgerEntry
+                {
+                    Date = r.Date,
+                    Type = r.ReturnType,
+                    Reference = $"RET-{r.Id}",
+                    Debit = r.RefundAmount, // goods value already reflected in the Sale's NetAmount
+                    Credit = 0,
+                    Notes = $"Returned: {returnedProducts}{replacementProducts}"
                 });
             }
 
@@ -105,14 +105,14 @@ namespace MedicalStore.BLL.Services
 
             foreach (var pay in payments)
             {
-                ledger.Add(new LedgerEntry 
-                { 
-                    Date = pay.Date, 
-                    Type = "Payment", 
-                    Reference = $"SPAY-{pay.Id}", 
-                    Debit = pay.Amount, 
-                    Credit = 0, 
-                    Notes = pay.Notes 
+                ledger.Add(new LedgerEntry
+                {
+                    Date = pay.Date,
+                    Type = pay.PaymentMethod == "Return" ? "Return" : "Payment",
+                    Reference = $"SPAY-{pay.Id}",
+                    Debit = pay.Amount,
+                    Credit = 0,
+                    Notes = pay.Notes
                 });
             }
 

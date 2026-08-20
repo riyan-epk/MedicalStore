@@ -43,6 +43,8 @@
                             Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="ViewHistory_Click"/>
                     <Button Content="Pay"      Style="{StaticResource AccentButton}"  Height="36"
                             Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="RecordPayment_Click"/>
+                    <Button Content="Return Stock" Style="{StaticResource PrimaryButton}" Height="36"
+                            Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="ReturnStock_Click"/>
                     <Button Content="Edit"     Style="{StaticResource PrimaryButton}" Height="36"
                             Padding="14,0" Margin="0,0,6,0" FontSize="12" Click="EditSupplier_Click"/>
                     <Button Content="Add New"  Style="{StaticResource SuccessButton}" Height="36"

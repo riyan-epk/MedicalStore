@@ -23,6 +23,7 @@ namespace MedicalStore.DAL
         public DbSet<SupplierPayment> SupplierPayments { get; set; } = null!;
         public DbSet<Expense> Expenses { get; set; } = null!;
         public DbSet<Setting> Settings { get; set; } = null!;
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
         private readonly string _dbPath;
 
@@ -199,6 +200,23 @@ namespace MedicalStore.DAL
             try { Database.ExecuteSqlRaw("ALTER TABLE SaleItems ADD COLUMN UnitsPerPack INTEGER NOT NULL DEFAULT 1;"); } catch { }
             // Seed existing sale items: TotalUnits = Quantity, LooseUnits = Quantity (since all old sales were unit-based)
             try { Database.ExecuteSqlRaw("UPDATE SaleItems SET TotalUnits = Quantity, LooseUnits = Quantity WHERE TotalUnits = 0 AND Quantity > 0;"); } catch { }
+
+            // ── Opening balances (Customers / Suppliers) ─────────────────────────
+            try { Database.ExecuteSqlRaw("ALTER TABLE Customers ADD COLUMN OpeningBalance TEXT NOT NULL DEFAULT '0';"); } catch { }
+            try { Database.ExecuteSqlRaw("ALTER TABLE Suppliers ADD COLUMN OpeningBalance TEXT NOT NULL DEFAULT '0';"); } catch { }
+
+            // ── Return profit re-dating ──────────────────────────────────────────
+            try { Database.ExecuteSqlRaw("ALTER TABLE Returns ADD COLUMN ProfitImpact TEXT NOT NULL DEFAULT '0';"); } catch { }
+
+            // ── Purchase-order lifecycle ─────────────────────────────────────────
+            try { Database.ExecuteSqlRaw("ALTER TABLE Purchases ADD COLUMN Status TEXT NOT NULL DEFAULT 'Received';"); } catch { }
+            try { Database.ExecuteSqlRaw("ALTER TABLE PurchaseItems ADD COLUMN ReceivedUnits INTEGER NOT NULL DEFAULT 0;"); } catch { }
+            // Existing purchases were immediate/fully received
+            try { Database.ExecuteSqlRaw("UPDATE Purchases SET Status = 'Received' WHERE Status IS NULL OR Status = '';"); } catch { }
+            try { Database.ExecuteSqlRaw("UPDATE PurchaseItems SET ReceivedUnits = TotalUnits WHERE ReceivedUnits = 0 AND TotalUnits > 0;"); } catch { }
+
+            // ── Audit log ────────────────────────────────────────────────────────
+            try { Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS AuditLogs (Id INTEGER PRIMARY KEY AUTOINCREMENT, Date TEXT NOT NULL, UserId INTEGER NOT NULL DEFAULT 0, Username TEXT, Action TEXT, Entity TEXT, EntityId INTEGER NOT NULL DEFAULT 0, Details TEXT);"); } catch { }
         }
     }
 }

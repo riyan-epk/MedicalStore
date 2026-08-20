@@ -18,7 +18,11 @@ namespace MedicalStore.DAL.Entities
         public string Address { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Balance { get; set; }
+        public decimal Balance { get; set; } // Positive = we owe the supplier
+
+        // Starting payable when the supplier was first added (existing creditor onboarding).
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OpeningBalance { get; set; }
 
         public bool IsActive { get; set; } = true;
 

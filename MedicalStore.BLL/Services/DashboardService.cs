@@ -18,6 +18,7 @@ namespace MedicalStore.BLL.Services
             var today = DateTime.Now.Date;
             var tomorrow = today.AddDays(1);
             var profit = db.Sales.Where(s => s.Date >= today && s.Date < tomorrow).Select(s => s.Profit).AsEnumerable().Sum();
+            profit += db.Returns.Where(r => r.Date >= today && r.Date < tomorrow).Select(r => r.ProfitImpact).AsEnumerable().Sum();
             var expenses = db.Expenses.Where(e => e.Date >= today && e.Date < tomorrow).Select(e => e.Amount).AsEnumerable().Sum();
             return profit - expenses;
         }
@@ -56,8 +57,9 @@ namespace MedicalStore.BLL.Services
             using var db = new AppDbContext();
             
             var profit = db.Sales.Where(s => s.Date >= monthStart && s.Date < monthEnd).Select(s => s.Profit).AsEnumerable().Sum();
+            profit += db.Returns.Where(r => r.Date >= monthStart && r.Date < monthEnd).Select(r => r.ProfitImpact).AsEnumerable().Sum();
             var expenses = db.Expenses.Where(e => e.Date >= monthStart && e.Date < monthEnd).Select(e => e.Amount).AsEnumerable().Sum();
-            
+
             return profit - expenses;
         }
 

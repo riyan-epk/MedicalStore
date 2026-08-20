@@ -21,6 +21,12 @@ namespace MedicalStore.DAL.Entities
 
         public DateTime Date { get; set; } = DateTime.Now;
 
+        // Purchase-order lifecycle: "Ordered" (placed, not received – no stock yet),
+        // "PartiallyReceived", "Received" (fully received), "Cancelled".
+        // Quick immediate purchases are created directly as "Received".
+        [MaxLength(30)]
+        public string Status { get; set; } = "Received";
+
         [MaxLength(500)]
         public string? Notes { get; set; }
 
@@ -61,8 +67,12 @@ namespace MedicalStore.DAL.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal PackPrice { get; set; }
 
-        /// <summary>Total units added to stock = PackQty × UnitsPerPack.</summary>
+        /// <summary>Total units ordered = PackQty × UnitsPerPack.</summary>
         public int TotalUnits { get; set; }
+
+        /// <summary>Units actually received into stock so far (for partial receiving).
+        /// Equals TotalUnits once fully received.</summary>
+        public int ReceivedUnits { get; set; }
 
         // Navigation
         [ForeignKey(nameof(PurchaseId))]

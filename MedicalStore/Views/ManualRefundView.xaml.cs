@@ -653,7 +653,8 @@ namespace MedicalStore.Views
                     salesAdjustment,
                     replacedItems.Any() ? "Manual Replace" : "Manual Refund",
                     notes,
-                    string.IsNullOrEmpty(invoiceNo) ? null : invoiceNo
+                    string.IsNullOrEmpty(invoiceNo) ? null : invoiceNo,
+                    chkRestock.IsChecked == true
                 );
 
                 if (result.Success && result.Return != null)

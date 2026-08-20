@@ -23,6 +23,12 @@ namespace MedicalStore.DAL.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal ReplaceAmount { get; set; }
 
+        // Net profit change caused by this return, dated to the return (not the original sale).
+        // Set only by ProcessReturn (linked returns); direct/manual returns carry their profit
+        // on their own dated adjustment sale, so this stays 0 for those.
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ProfitImpact { get; set; }
+
         public DateTime Date { get; set; } = DateTime.Now;
 
         [MaxLength(500)]

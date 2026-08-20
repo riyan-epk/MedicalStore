@@ -14,8 +14,9 @@ namespace MedicalStore.BLL.Services
             decimal refundPaid, 
             decimal extraReceived,
             decimal salesAdjustment,
-            string returnType, 
-            string? notes)
+            string returnType,
+            string? notes,
+            bool restockItems = true)
         {
             using var db = new AppDbContext();
             using var transaction = db.Database.BeginTransaction();
@@ -58,11 +59,17 @@ namespace MedicalStore.BLL.Services
 
                     ret.Items.Add(new ReturnItem { ProductId = item.ProductId, Quantity = item.Qty, UnitPrice = item.UnitPrice, Total = lineTotal });
 
-                    var product = db.Products.Find(item.ProductId);
-                    if (product != null)
+                    // Restock only when items are resalable. Defective/scrapped items
+                    // (restockItems = false) are removed from sale but NOT added back to stock.
+                    if (restockItems)
                     {
-                        product.Quantity   += item.Qty;
-                        product.StockUnits  = product.Quantity; // keep in sync
+                        var product = db.Products.Find(item.ProductId);
+                        if (product != null)
+                        {
+                            int cur = product.StockUnits > 0 ? product.StockUnits : product.Quantity;
+                            product.StockUnits = cur + item.Qty;
+                            product.Quantity   = product.StockUnits; // keep in sync
+                        }
                     }
                 }
 
@@ -78,7 +85,8 @@ namespace MedicalStore.BLL.Services
                     decimal lineTotal = item.Qty * item.UnitPrice;
                     replacementTotal += lineTotal;
 
-                    decimal itemPurchasePrice = product.UnitPrice > 0 ? product.UnitPrice : product.PurchasePrice;
+                    // Cost basis is the purchase cost, not product.UnitPrice (which is a selling price).
+                    decimal itemPurchasePrice = product.PurchasePrice > 0 ? product.PurchasePrice : product.UnitPrice;
                     replacementProfit += (item.UnitPrice - itemPurchasePrice) * item.Qty;
 
                     ret.ReplacementItems.Add(new ReplacementItem { ProductId = item.ProductId, Quantity = item.Qty, UnitPrice = item.UnitPrice, Total = lineTotal });
@@ -113,27 +121,35 @@ namespace MedicalStore.BLL.Services
                     customer.Balance += netItemValueDifference - netCashTransaction;
                 }
 
-                // Recalculate Sale Profit
-                decimal updatedTotalProfit = 0;
+                // Profit impact of THIS return, attributed to the RETURN's date (not the original
+                // sale). We compare the profit on units still sold BEFORE vs AFTER this return; the
+                // difference (plus this return's replacement profit and any manual adjustment) is
+                // stored on the Return and summed by reports on the return date. The original
+                // Sale.Profit is intentionally left untouched so the sale's own period keeps the
+                // profit it booked — the reversal lands in the period the return happened.
+                decimal profitBefore = 0;
+                decimal profitAfter  = 0;
                 foreach (var sItem in sale.Items)
                 {
                     int alreadyReturnedQty = existingReturns.SelectMany(r => r.Items).Where(i => i.ProductId == sItem.ProductId).Sum(i => i.Quantity);
-                    int currentReturnQty = returnedItems.Where(i => i.ProductId == sItem.ProductId).Sum(i => i.Qty);
-                    int totalReturned = alreadyReturnedQty + currentReturnQty;
-                    int finalSoldQty = sItem.Quantity - totalReturned;
+                    int currentReturnQty   = returnedItems.Where(i => i.ProductId == sItem.ProductId).Sum(i => i.Qty);
+                    int soldBefore = sItem.Quantity - alreadyReturnedQty;
+                    int soldAfter  = soldBefore - currentReturnQty;
 
-                    if (finalSoldQty > 0)
-                    {
-                        decimal proportionalDiscount = sale.SubTotal > 0 ? (sItem.Total / sale.SubTotal) * sale.Discount : 0;
-                        decimal finalSellingPrice = sItem.Quantity > 0 ? (sItem.Total - proportionalDiscount) / sItem.Quantity : 0;
-                        updatedTotalProfit += (finalSellingPrice - sItem.PurchasePrice) * finalSoldQty;
-                    }
+                    decimal proportionalDiscount = sale.SubTotal > 0 ? (sItem.Total / sale.SubTotal) * sale.Discount : 0;
+                    decimal finalSellingPrice    = sItem.Quantity > 0 ? (sItem.Total - proportionalDiscount) / sItem.Quantity : 0;
+                    decimal unitProfit           = finalSellingPrice - sItem.PurchasePrice;
+
+                    if (soldBefore > 0) profitBefore += unitProfit * soldBefore;
+                    if (soldAfter  > 0) profitAfter  += unitProfit * soldAfter;
                 }
-                
-                sale.SubTotal += (replacementTotal - returnedTotal);
+
+                ret.ProfitImpact = (profitAfter - profitBefore) + replacementProfit + salesAdjustment;
+
+                sale.SubTotal  += (replacementTotal - returnedTotal);
                 sale.NetAmount += (replacementTotal - returnedTotal) + salesAdjustment;
                 sale.PaidAmount += (extraReceived - refundPaid);
-                sale.Profit = updatedTotalProfit + replacementProfit + salesAdjustment;
+                // Sale.Profit intentionally NOT changed here — see ret.ProfitImpact above.
                 db.Sales.Update(sale);
 
                 db.Returns.Add(ret);
@@ -180,23 +196,21 @@ namespace MedicalStore.BLL.Services
                 .ToList();
         }
 
-        public (bool Success, string Message) ProcessManualRefund(Return model, decimal discountDeducted, List<(int ProductId, int Qty, decimal UnitPrice)> replacedItems)
+        public (bool Success, string Message) ProcessManualRefund(Return model, decimal discountDeducted, List<(int ProductId, int Qty, decimal UnitPrice)> replacedItems, bool restockItems = true)
         {
             using var db = new AppDbContext();
             using var transaction = db.Database.BeginTransaction();
-            
-            try 
+
+            try
             {
-                var dummySale = db.Sales.FirstOrDefault(s => s.InvoiceNo == "MANUAL-REFUND");
-                if (dummySale == null)
-                {
-                    dummySale = new Sale { InvoiceNo = "MANUAL-REFUND", CustomerId = 1, UserId = 1, Date = DateTime.Now };
-                    db.Sales.Add(dummySale);
-                    db.SaveChanges();
-                }
+                // Each manual refund gets its OWN adjustment sale so figures never accumulate
+                // into a single ever-growing negative row (which corrupted sales aggregates).
+                var dummySale = new Sale { InvoiceNo = $"MREF-{DateTime.Now:yyMMddHHmmssfff}", CustomerId = 1, UserId = 1, Date = DateTime.Now };
+                db.Sales.Add(dummySale);
+                db.SaveChanges();
 
                 model.SaleId = dummySale.Id;
-                
+
                 db.Returns.Add(model);
 
                 decimal returnedTotal = 0;
@@ -207,8 +221,11 @@ namespace MedicalStore.BLL.Services
                     var product = db.Products.Find(item.ProductId);
                     if (product != null)
                     {
-                        product.Quantity   += item.Quantity; // Increase stock
-                        product.StockUnits  = product.Quantity; // keep in sync
+                        if (restockItems)
+                        {
+                            product.Quantity   += item.Quantity; // Increase stock
+                            product.StockUnits  = product.Quantity; // keep in sync
+                        }
                         returnedTotal += item.Total;
                         returnedProfit += (item.UnitPrice - product.PurchasePrice) * item.Quantity;
                     }
@@ -319,17 +336,19 @@ namespace MedicalStore.BLL.Services
             decimal salesAdjustment,
             string returnType,
             string? notes = null,
-            string? originalInvoiceNo = null)
+            string? originalInvoiceNo = null,
+            bool restockItems = true)
         {
             using var db = new AppDbContext();
             using var transaction = db.Database.BeginTransaction();
-            
-            try 
+
+            try
             {
                 var customer = db.Customers.Find(customerId);
 
                 Sale? linkedSale = null;
 
+                // Only link to a REAL sale when the caller supplies a matching invoice number.
                 if (!string.IsNullOrWhiteSpace(originalInvoiceNo))
                 {
                     linkedSale = db.Sales.FirstOrDefault(s => s.InvoiceNo == originalInvoiceNo.Trim());
@@ -337,14 +356,10 @@ namespace MedicalStore.BLL.Services
 
                 if (linkedSale == null)
                 {
-                    // Fetch the most recent sale for this customer or the first sale in DB as a placeholder for SaleId
-                    linkedSale = db.Sales.OrderByDescending(s => s.Id).FirstOrDefault(s => s.CustomerId == customerId) 
-                                    ?? db.Sales.FirstOrDefault();
-                }
-
-                if (linkedSale == null)
-                {
-                    linkedSale = new Sale { InvoiceNo = $"DUMMY-{DateTime.Now.Ticks}", CustomerId = customerId, UserId = 1, Date = DateTime.Now };
+                    // No original invoice supplied/matched. Post the return to a DEDICATED
+                    // adjustment sale so its figures are isolated — previously this picked a
+                    // random existing sale and corrupted that unrelated sale's totals.
+                    linkedSale = new Sale { InvoiceNo = $"DRET-{DateTime.Now:yyMMddHHmmssfff}", CustomerId = customerId, UserId = 1, Date = DateTime.Now };
                     db.Sales.Add(linkedSale);
                     db.SaveChanges();
                 }
@@ -372,8 +387,12 @@ namespace MedicalStore.BLL.Services
                     var product = db.Products.Find(item.ProductId);
                     if (product != null)
                     {
-                        product.Quantity   += item.Qty;
-                        product.StockUnits  = product.Quantity; // keep in sync
+                        if (restockItems)
+                        {
+                            int cur = product.StockUnits > 0 ? product.StockUnits : product.Quantity;
+                            product.StockUnits = cur + item.Qty;
+                            product.Quantity   = product.StockUnits; // keep in sync
+                        }
                         returnedProfit += (item.UnitPrice - product.PurchasePrice) * item.Qty;
                     }
                 }

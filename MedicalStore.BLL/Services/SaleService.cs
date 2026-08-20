@@ -69,7 +69,9 @@ namespace MedicalStore.BLL.Services
                         product.StockUnits = availableUnits - totalUnits;
                         product.Quantity   = product.StockUnits;
 
-                        itemPurchasePrice = product.UnitPrice > 0 ? product.UnitPrice : product.PurchasePrice;
+                        // Cost basis for profit MUST be the purchase cost, not product.UnitPrice
+                        // (product.UnitPrice holds the per-unit SELLING price = PackPrice/UnitsPerPack).
+                        itemPurchasePrice = product.PurchasePrice > 0 ? product.PurchasePrice : product.UnitPrice;
                     }
 
                     sale.Items.Add(new SaleItem
@@ -135,9 +137,11 @@ namespace MedicalStore.BLL.Services
                     
                     if (netKeptCash > sale.NetAmount)
                     {
-                        decimal extraTip = netKeptCash - sale.NetAmount;
-                        sale.NetAmount += extraTip;
-                        sale.Profit    += extraTip;
+                        // Overpayment on a cash sale is CHANGE owed back to the customer,
+                        // not extra revenue/profit. Keep only the sale value; return the rest.
+                        decimal excess = netKeptCash - sale.NetAmount;
+                        changeAmount  += excess;
+                        netKeptCash    = sale.NetAmount;
                     }
                     else if (netKeptCash < sale.NetAmount)
                     {
@@ -204,9 +208,9 @@ namespace MedicalStore.BLL.Services
 
                     if (forcedOverpayment > 0)
                     {
-                        sale.NetAmount += forcedOverpayment;
-                        sale.Profit    += forcedOverpayment;
-                        sale.PaidAmount += forcedOverpayment;
+                        // Excess beyond what the customer owes (and not added to credit) is
+                        // returned as CHANGE — never booked as revenue/profit.
+                        sale.ChangeAmount += forcedOverpayment;
                     }
 
                     db.SaveChanges();

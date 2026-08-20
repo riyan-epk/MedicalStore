@@ -284,6 +284,9 @@
                         <TextBox x:Name="txtReturnNotes" Style="{StaticResource ModernTextBox}"
                                  Tag="Reason for return or additional notes..."
                                  Height="100" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        <CheckBox x:Name="chkRestock" Content="Restock returned items (uncheck if damaged/expired)"
+                                  IsChecked="True" Margin="0,10,0,0" FontSize="12"
+                                  Foreground="{StaticResource TextSecondaryBrush}"/>
                     </StackPanel>
 
                     <!-- Summary -->

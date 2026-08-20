@@ -59,6 +59,9 @@ namespace MedicalStore.BLL.Services
             var existing = db.Products.Find(product.Id);
             if (existing == null) return (false, "Product not found.");
 
+            decimal oldPurchase = existing.PurchasePrice;
+            decimal oldSale = existing.SalePrice;
+
             existing.Name = product.Name;
             existing.CategoryId = product.CategoryId;
             existing.SupplierId = product.SupplierId;
@@ -81,6 +84,11 @@ namespace MedicalStore.BLL.Services
             NormalizePackUnitFields(existing);
 
             db.SaveChanges();
+
+            if (oldPurchase != existing.PurchasePrice || oldSale != existing.SalePrice)
+                AuditService.Log("Price Change", "Product", existing.Id,
+                    $"Cost {oldPurchase:N2}->{existing.PurchasePrice:N2}, Sale {oldSale:N2}->{existing.SalePrice:N2}");
+
             return (true, "Product updated successfully.");
         }
 

@@ -287,6 +287,10 @@
                                            Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="txtPaidAmount" Style="{StaticResource ModernTextBox}"
                                          Tag="Rs 0" Width="180" Text="0" PreviewTextInput="NumberValidation"/>
+                                <CheckBox x:Name="chkOrderOnly" Content="Order only (receive later)"
+                                          FontSize="11" Margin="0,8,0,0"
+                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                          ToolTip="Create a purchase order without adding stock yet. Receive it later from the history list."/>
                             </StackPanel>
                             <Button Content="Save Purchase" Style="{StaticResource SuccessButton}"
                                     Height="38" Padding="18,0" VerticalAlignment="Bottom"
@@ -344,6 +348,23 @@
                                 <DataGridTextColumn Header="Total"    Binding="{Binding TotalAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
                                 <DataGridTextColumn Header="Paid"     Binding="{Binding PaidAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
                                 <DataGridTextColumn Header="Due"      Binding="{Binding DueAmount, StringFormat=Rs {0:N2}}" Width="Auto"/>
+                                <DataGridTextColumn Header="Status"   Binding="{Binding Status}" Width="Auto"/>
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Receive" Style="{StaticResource SuccessButton}" Height="26"
+                                                        FontSize="12" Padding="8,0" Margin="0,0,6,0" Cursor="Hand"
+                                                        ToolTip="Receive ordered goods into stock"
+                                                        Click="ReceivePurchase_Click"/>
+                                                <Button Content="Cancel" Style="{StaticResource DangerButton}" Height="26"
+                                                        FontSize="12" Padding="8,0" Cursor="Hand"
+                                                        ToolTip="Reverse this purchase (removes received stock &amp; supplier due)"
+                                                        Click="CancelPurchase_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>

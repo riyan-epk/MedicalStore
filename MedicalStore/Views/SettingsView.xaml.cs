@@ -105,6 +105,12 @@ namespace MedicalStore.Views
             }
         }
 
+        private void ViewAuditLog_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new AuditLogDialog { Owner = Window.GetWindow(this) };
+            dialog.ShowDialog();
+        }
+
         private void BrowseLogo_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog

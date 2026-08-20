@@ -18,9 +18,12 @@ namespace MedicalStore.BLL.Services
             var refunds = db.Returns.Where(r => r.Date >= from && r.Date <= to).Select(r => r.RefundAmount).AsEnumerable().Sum();
             var discounts = db.Sales.Where(s => s.Date >= from && s.Date <= to).Select(s => s.Discount).AsEnumerable().Sum();
             
-            // Accurate Gross Profit from the Profit column added in Sale entity
+            // Accurate Gross Profit from the Profit column on the Sale entity …
             var grossProfit = db.Sales.Where(s => s.Date >= from && s.Date <= to).Select(s => s.Profit).AsEnumerable().Sum();
-            
+            // … plus the profit reversed by returns, dated to the return (linked returns only;
+            // direct/manual returns carry their profit on their own dated adjustment sale).
+            grossProfit += db.Returns.Where(r => r.Date >= from && r.Date <= to).Select(r => r.ProfitImpact).AsEnumerable().Sum();
+
             // Expenses
             var expenses = db.Expenses.Where(e => e.Date >= from && e.Date <= to).Select(e => e.Amount).AsEnumerable().Sum();
             
