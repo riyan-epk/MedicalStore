@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using MedicalStore.BLL.Services;
+using MedicalStore.Common.Helpers;
 using MedicalStore.DAL.Entities;
 
 namespace MedicalStore.Views
@@ -12,6 +13,10 @@ namespace MedicalStore.Views
         public CustomersView()
         {
             InitializeComponent();
+            // "Delete All" wipes every customer and their entire sales/returns/payments
+            // history — an irreversible, admin-only action. Hide it from non-admins.
+            if (!AppSession.HasPermission(Common.Enums.Permission.ManageUsers))
+                btnDeleteAll.Visibility = Visibility.Collapsed;
             LoadCustomers();
         }
 
@@ -213,6 +218,15 @@ namespace MedicalStore.Views
         {
             try
             {
+                // Defense in depth: block the destructive action even if the button is
+                // somehow reachable by a non-admin.
+                if (!AppSession.HasPermission(Common.Enums.Permission.ManageUsers))
+                {
+                    MessageBox.Show("You do not have permission to perform this action.",
+                        "Access Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 var result = MessageBox.Show("CRITICAL ACTION: Are you sure you want to delete ALL customers and their entire transaction history (Sales, Returns, Payments)?\n\nThis action CANNOT be undone.", 
                     "Confirm Mass Deletion", MessageBoxButton.YesNo, MessageBoxImage.Stop);
 

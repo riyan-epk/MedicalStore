@@ -18,7 +18,7 @@
                                Foreground="White" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Background="{StaticResource Card6Gradient}" CornerRadius="12" Padding="16,12" Margin="4,0">
+            <Border x:Name="cardProfitToday" Background="{StaticResource Card6Gradient}" CornerRadius="12" Padding="16,12" Margin="4,0">
                 <StackPanel>
                     <TextBlock Text="Profit Today" FontSize="12" Foreground="#C8FFFFFF"/>
                     <TextBlock x:Name="lblTodayProfit" Text="Rs 0" FontSize="22" FontWeight="Bold"
@@ -105,7 +105,7 @@
                         <DataGridTextColumn Header="SubTotal" Binding="{Binding SubTotal,  StringFormat='Rs {0:N2}'}" Width="Auto" />
                         <DataGridTextColumn Header="Discount" Binding="{Binding Discount,  StringFormat='Rs {0:N2}'}" Width="Auto" />
                         <DataGridTextColumn Header="Net"      Binding="{Binding NetAmount,  StringFormat='Rs {0:N2}'}" Width="Auto" />
-                        <DataGridTextColumn Header="Profit"   Binding="{Binding Profit,     StringFormat='Rs {0:N2}'}" Width="Auto" />
+                        <DataGridTextColumn x:Name="colProfit" Header="Profit"   Binding="{Binding Profit,     StringFormat='Rs {0:N2}'}" Width="Auto" />
                         <DataGridTextColumn Header="Paid"     Binding="{Binding PaidAmount,  StringFormat='Rs {0:N2}'}" Width="Auto" />
                         <!-- Due column: green badge when 0, red amount when outstanding -->
                         <DataGridTemplateColumn Header="Due" Width="Auto">

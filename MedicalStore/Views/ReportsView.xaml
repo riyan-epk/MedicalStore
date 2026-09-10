@@ -21,6 +21,9 @@
                                Foreground="{StaticResource TextPrimaryBrush}"/>
                     <TextBlock Text="Generate financial, inventory, and customer reports"
                                FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                    <TextBlock Text="Developed by Riyan  •  0309 8480389"
+                               FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}"
+                               Opacity="0.85" Margin="0,3,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -207,7 +210,7 @@
             </TabItem>
 
             <!-- Financial Report -->
-            <TabItem Header="Financial">
+            <TabItem x:Name="tabFinancial" Header="Financial">
                 <Border Background="White" CornerRadius="0,0,14,14" Padding="20">
                     <StackPanel>
                         <!-- Top Toolbar with Export Button -->
@@ -325,7 +328,7 @@
                                 <TextBlock Text="Select Customer:" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <ComboBox x:Name="cbCustomerDetail" Width="200" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="CbCustomerDetail_SelectionChanged"/>
                                 <Button Content="Export CSV" Style="{StaticResource AccentButton}" Margin="15,0,5,0" Click="ExportCustomerCsv_Click"/>
-                                <Button Content="Export Excel" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="ExportCustomerExcel_Click"/>
+                                <Button Content="Export CSV" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="ExportCustomerExcel_Click"/>
                                 <Button Content="Download PDF" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="DownloadCustomerPdf_Click"/>
                             </StackPanel>
                         </Border>
@@ -393,7 +396,7 @@
                                 <TextBlock Text="Select Supplier:" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <ComboBox x:Name="cbSupplierDetail" Width="200" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="CbSupplierDetail_SelectionChanged"/>
                                 <Button Content="Export CSV" Style="{StaticResource AccentButton}" Margin="15,0,5,0" Click="ExportSupplierCsv_Click"/>
-                                <Button Content="Export Excel" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="ExportSupplierExcel_Click"/>
+                                <Button Content="Export CSV" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="ExportSupplierExcel_Click"/>
                                 <Button Content="Download PDF" Style="{StaticResource AccentButton}" Margin="5,0,5,0" Click="DownloadSupplierPdf_Click"/>
                             </StackPanel>
                         </Border>

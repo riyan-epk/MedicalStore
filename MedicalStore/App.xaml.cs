@@ -1,17 +1,22 @@
 using System.Windows;
 using MedicalStore.DAL;
+using MedicalStore.BLL.Services;
+using MedicalStore.Views;
 
 namespace MedicalStore
 {
     public partial class App : Application
     {
+        /// <summary>Current trial/license status, evaluated once at startup for the UI to display.</summary>
+        public static LicenseStatus? LicenseStatus { get; private set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             // Global Exception Handling
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-            
+
             // Ensure database is created with seed data
             try
             {
@@ -57,7 +62,34 @@ namespace MedicalStore
             {
                 MessageBox.Show($"Database initialization failed: {ex.Message}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
+                return;
             }
+
+            // ── Licensing / trial gate ───────────────────────────────────────────
+            // Don't let the app close between the activation window and the login
+            // window just because no window is open for a moment.
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            var licenseService = new LicenseService();
+            LicenseStatus = licenseService.Evaluate();
+
+            if (LicenseStatus.State == LicenseState.Expired)
+            {
+                var win = new LicenseWindow(licenseService, trialStillActive: false);
+                win.ShowDialog();
+                LicenseStatus = licenseService.Evaluate();
+
+                if (!win.Activated || LicenseStatus.State == LicenseState.Expired)
+                {
+                    Shutdown();   // trial ended and no valid key entered
+                    return;
+                }
+            }
+
+            // Proceed to login.
+            var login = new LoginView();
+            ShutdownMode = ShutdownMode.OnLastWindowClose;
+            login.Show();
         }
 
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)

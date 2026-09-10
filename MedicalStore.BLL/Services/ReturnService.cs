@@ -119,6 +119,21 @@ namespace MedicalStore.BLL.Services
                     // If netItemValueDifference is positive (customer owes), and customer paid extraReceived, their balance decreases by extraReceived.
                     // If netItemValueDifference is negative (store owes), and store paid refundPaid, their balance increases by refundPaid (meaning store owes less).
                     customer.Balance += netItemValueDifference - netCashTransaction;
+
+                    // Extra cash the customer hands over during an exchange is real money
+                    // received. Record it as a Payment (credit) so the khata ledger reconciles
+                    // with Customer.Balance — the balance already nets this cash, but the ledger
+                    // has no other record of it (only refunds paid out were tracked before).
+                    if (extraReceived > 0)
+                    {
+                        db.Payments.Add(new Payment
+                        {
+                            CustomerId = customerId,
+                            Amount     = extraReceived,
+                            Date       = ret.Date,
+                            Notes      = $"Extra received on {returnType}"
+                        });
+                    }
                 }
 
                 // Profit impact of THIS return, attributed to the RETURN's date (not the original
@@ -477,6 +492,21 @@ namespace MedicalStore.BLL.Services
                     // If netItemValueDifference is positive (customer owes), and customer paid extraReceived, their balance decreases by extraReceived.
                     // If netItemValueDifference is negative (store owes), and store paid refundPaid, their balance increases by refundPaid (meaning store owes less).
                     customer.Balance += netItemValueDifference - netCashTransaction;
+
+                    // Extra cash the customer hands over during an exchange is real money
+                    // received. Record it as a Payment (credit) so the khata ledger reconciles
+                    // with Customer.Balance — the balance already nets this cash, but the ledger
+                    // has no other record of it (only refunds paid out were tracked before).
+                    if (extraReceived > 0)
+                    {
+                        db.Payments.Add(new Payment
+                        {
+                            CustomerId = customerId,
+                            Amount     = extraReceived,
+                            Date       = ret.Date,
+                            Notes      = $"Extra received on {returnType}"
+                        });
+                    }
                 }
 
                 db.Returns.Add(ret);

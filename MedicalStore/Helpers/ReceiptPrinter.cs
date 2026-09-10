@@ -218,6 +218,8 @@ namespace MedicalStore.Helpers
                 p.Inlines.Add(new Run(AppConstants.ReceiptPolicyNote + "\n"));
             }
             p.Inlines.Add(new Run("\nThank you for choosing " + AppConstants.StoreName + "!"));
+            p.Inlines.Add(new Run("\n" + new string('-', 45) + "\n") { FontSize = 8 });
+            p.Inlines.Add(new Run("Software by " + AppConstants.DeveloperName + " • " + AppConstants.DeveloperPhone) { FontSize = 8 });
             return p;
         }
     }

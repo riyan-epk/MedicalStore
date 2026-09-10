@@ -113,12 +113,19 @@ namespace MedicalStore.Helpers
 
         private void AddFooter(FlowDocument doc)
         {
-            doc.Blocks.Add(new Paragraph(new Run($"This is a computer-generated report. | Store: {AppConstants.StoreName}")) 
-            { 
-                FontSize = 10, 
-                FontStyle = FontStyles.Italic, 
+            doc.Blocks.Add(new Paragraph(new Run($"This is a computer-generated report. | Store: {AppConstants.StoreName}"))
+            {
+                FontSize = 10,
+                FontStyle = FontStyles.Italic,
                 TextAlignment = TextAlignment.Center,
                 Margin = new Thickness(0, 40, 0, 0),
+                Foreground = Brushes.Gray
+            });
+            doc.Blocks.Add(new Paragraph(new Run(AppConstants.DeveloperBranding))
+            {
+                FontSize = 9,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 2, 0, 0),
                 Foreground = Brushes.Gray
             });
         }

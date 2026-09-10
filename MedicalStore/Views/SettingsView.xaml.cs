@@ -10,6 +10,7 @@ namespace MedicalStore.Views
     {
         private readonly BackupService _backupService = new();
         private readonly SettingService _settingService = new();
+        private readonly LicenseService _licenseService = new();
 
         public SettingsView()
         {
@@ -26,6 +27,24 @@ namespace MedicalStore.Views
             txtExpiryDays.Text = AppConstants.NearExpiryDays.ToString();
             chkTwoDecimals.IsChecked = AppConstants.EnableTwoDecimalPlaces;
 
+            RefreshLicenseStatus();
+        }
+
+        private void RefreshLicenseStatus()
+        {
+            var s = _licenseService.Evaluate();
+            lblLicenseStatus.Text = s.Message;
+        }
+
+        private void ActivateLicense_Click(object sender, RoutedEventArgs e)
+        {
+            var status = _licenseService.Evaluate();
+            var win = new LicenseWindow(_licenseService, trialStillActive: status.State != LicenseState.Expired)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            win.ShowDialog();
+            RefreshLicenseStatus();
         }
 
         private void SavePosSettings_Click(object sender, RoutedEventArgs e)

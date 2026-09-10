@@ -22,6 +22,12 @@ namespace MedicalStore.Views
             lblCurrentUser.Text = AppSession.CurrentFullName;
             lblUserInfo.Text = $"{AppSession.CurrentFullName} ({AppSession.CurrentRole})";
 
+            // License / trial indicator
+            var lic = App.LicenseStatus;
+            if (lic != null && (lic.State == LicenseState.Trial ||
+                (lic.State == LicenseState.Licensed && !lic.Lifetime && lic.DaysRemaining <= 15)))
+                lblLicense.Text = lic.Message;
+
             // Clock timer
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (s, e) => lblDateTime.Text = DateTime.Now.ToString("dddd, dd MMM yyyy  hh:mm tt");
@@ -31,9 +37,40 @@ namespace MedicalStore.Views
             // Apply role-based visibility
             ApplyPermissions();
 
-            // Navigate to dashboard
-            NavigateTo("Dashboard");
+            // Navigate to the first section the current user is allowed to open
+            // (Dashboard when permitted). Guarantees a user never lands on a blank
+            // frame if their permission set excludes the dashboard.
+            var firstPage = navPanel.Children.OfType<Button>()
+                .Select(b => b.Tag as string)
+                .FirstOrDefault(p => !string.IsNullOrEmpty(p) && CanAccess(p!));
+            NavigateTo(firstPage ?? "Dashboard");
         }
+
+        /// <summary>
+        /// Single source of truth for which permission each navigable section requires.
+        /// Used both to hide sidebar buttons and to hard-block navigation (defense in
+        /// depth) so a cashier can never reach admin/financial screens.
+        /// </summary>
+        public static bool CanAccess(string page) => page switch
+        {
+            "Dashboard"    => AppSession.HasPermission(Permission.ViewDashboard),
+            "Products"     => AppSession.HasPermission(Permission.ManageProducts),
+            "POS"          => AppSession.HasPermission(Permission.UsePOS),
+            "Sales"        => HasAny(Permission.ViewReports | Permission.ViewFinancials),
+            "Purchases"    => AppSession.HasPermission(Permission.ManagePurchases),
+            "Suppliers"    => AppSession.HasPermission(Permission.ManagePurchases),
+            "Customers"    => AppSession.HasPermission(Permission.ManageCustomers),
+            "Returns"      => AppSession.HasPermission(Permission.ManageReturns),
+            "ManualRefund" => AppSession.HasPermission(Permission.ManageReturns),
+            "Reports"      => HasAny(Permission.ViewReports | Permission.ViewFinancials),
+            "Users"        => AppSession.HasPermission(Permission.ManageUsers),
+            "Expenses"     => AppSession.HasPermission(Permission.ViewFinancials),
+            "Settings"     => HasAny(Permission.ManageSettings | Permission.SystemBackup),
+            _              => true
+        };
+
+        /// <summary>True when the user holds ANY of the supplied permission flags.</summary>
+        private static bool HasAny(Permission any) => (AppSession.CurrentPermissions & any) != 0;
 
         public void UpdateStoreName()
         {
@@ -75,11 +112,14 @@ namespace MedicalStore.Views
 
         private void ApplyPermissions()
         {
-            btnUsers.Visibility = AppSession.HasPermission(Permission.ManageUsers) ? Visibility.Visible : Visibility.Collapsed;
-            btnSettings.Visibility = AppSession.HasPermission(Permission.ManageSettings) || AppSession.HasPermission(Permission.SystemBackup) ? Visibility.Visible : Visibility.Collapsed;
-            btnProducts.Visibility = AppSession.HasPermission(Permission.ManageProducts) ? Visibility.Visible : Visibility.Collapsed;
-            btnPurchases.Visibility = AppSession.HasPermission(Permission.ManagePurchases) ? Visibility.Visible : Visibility.Collapsed;
-            btnReports.Visibility = AppSession.HasPermission(Permission.ViewReports) || AppSession.HasPermission(Permission.ViewFinancials) ? Visibility.Visible : Visibility.Collapsed;
+            // Show a sidebar button only if the user may open that section. Every
+            // navigable button is covered (previously Sales, Suppliers, Customers,
+            // Returns, Manual Refund and Expenses were always visible to everyone).
+            foreach (var btn in navPanel.Children.OfType<Button>())
+            {
+                if (btn.Tag is string page)
+                    btn.Visibility = CanAccess(page) ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
 
         private void Nav_Click(object sender, RoutedEventArgs e)
@@ -92,6 +132,16 @@ namespace MedicalStore.Views
 
         private void NavigateTo(string page)
         {
+            // Hard authorization gate (defense in depth): even if a button were made
+            // visible by mistake or a future code path calls this directly, a user
+            // without the required permission cannot open the section.
+            if (!CanAccess(page))
+            {
+                MessageBox.Show("You do not have permission to access this section.",
+                    "Access Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             // Update active button styling
             if (_activeNavButton is not  null)
                 _activeNavButton.Style = (Style)FindResource("SidebarButton");

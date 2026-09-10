@@ -19,6 +19,12 @@ namespace MedicalStore.Common.Constants
         public static bool EnableTwoDecimalPlaces { get; set; } = true;
         public static string StoreLogoPath { get; set; } = "";
 
+        // ── Developer / vendor branding ──────────────────────────────────────────
+        public const string DeveloperName = "Riyan";
+        public const string DeveloperPhone = "03098480389";
+        public const string DeveloperBranding = "Developed by Riyan  •  0309 8480389";
 
+        // ── Licensing ────────────────────────────────────────────────────────────
+        public const int TrialDays = 7;
     }
 }

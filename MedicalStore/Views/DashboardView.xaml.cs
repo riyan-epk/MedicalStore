@@ -16,6 +16,9 @@ namespace MedicalStore.Views
         public DashboardView()
         {
             InitializeComponent();
+            // Profit is financial data — hide the profit card from users without ViewFinancials.
+            if (!AppSession.HasPermission(Common.Enums.Permission.ViewFinancials))
+                cardTodayProfit.Visibility = System.Windows.Visibility.Collapsed;
             Loaded += DashboardView_Loaded;
         }
 

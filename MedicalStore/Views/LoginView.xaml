@@ -74,9 +74,17 @@
                 <Button Content="Sign In" Style="{StaticResource PrimaryButton}" 
                         Click="LoginButton_Click" Height="44" FontSize="15" Margin="0,0,0,12"/>
 
-                <!-- Footer -->
-                <TextBlock Text="Powered by 💻 Riyan" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" 
-                           HorizontalAlignment="Center" Opacity="0.8"/>
+                <!-- Trial / license status -->
+                <Border x:Name="trialBox" CornerRadius="6" Padding="8,5" Background="#FFF3E0"
+                        Margin="0,0,0,8" Visibility="Collapsed">
+                    <TextBlock x:Name="lblTrial" Text="" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#8A5A00" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+
+                <!-- Footer / developer branding -->
+                <TextBlock x:Name="lblBranding" Text="Developed by 💻 Riyan  •  0309 8480389"
+                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center" Opacity="0.85"/>
             </StackPanel>
         </Grid>
     </Border>

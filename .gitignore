@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Distributable build outputs (produced by dotnet publish - not source)
+dist/
+keygen/

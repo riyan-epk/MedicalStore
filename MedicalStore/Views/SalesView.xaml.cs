@@ -14,6 +14,13 @@ namespace MedicalStore.Views
         public SalesView()
         {
             InitializeComponent();
+            // Profit is financial data — hide it from users without ViewFinancials
+            // (e.g. a Manager who has ViewReports but not ViewFinancials).
+            if (!AppSession.HasPermission(Common.Enums.Permission.ViewFinancials))
+            {
+                cardProfitToday.Visibility = Visibility.Collapsed;
+                colProfit.Visibility = Visibility.Collapsed;
+            }
             LoadData();
         }
 

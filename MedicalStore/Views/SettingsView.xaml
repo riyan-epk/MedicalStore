@@ -144,6 +144,13 @@
                         <Button Content="Backup Now" Style="{StaticResource SuccessButton}" Click="Backup_Click" Height="46" Margin="0,0,0,16"/>
                         <Button Content="Restore Data" Style="{StaticResource DangerButton}" Click="Restore_Click" Height="46" Margin="0,0,0,16"/>
                         <Button Content="View Audit Log" Style="{StaticResource PrimaryButton}" Click="ViewAuditLog_Click" Height="46"/>
+
+                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,20,0,16"/>
+                        <TextBlock Text="License" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <TextBlock x:Name="lblLicenseStatus" Text="" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                        <Button x:Name="btnActivateLicense" Content="Activate / Manage License" Style="{StaticResource PrimaryButton}"
+                                Click="ActivateLicense_Click" Height="46"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -194,7 +201,7 @@
                                     <Border Background="#E8F5E9" CornerRadius="8" Padding="14,10" Margin="0,0,16,0">
                                         <StackPanel Orientation="Horizontal">
                                             <iconPacks:PackIconMaterial Kind="PhoneCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                            <TextBlock Text="03098484389" FontSize="14" FontWeight="Bold" Foreground="#2E7D32" VerticalAlignment="Center"/>
+                                            <TextBlock Text="0309 8480389" FontSize="14" FontWeight="Bold" Foreground="#2E7D32" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
                                     <!-- Dev Badge -->

@@ -27,7 +27,7 @@
                     <Button Content="History" Style="{StaticResource PrimaryButton}" Click="ViewHistory_Click" Margin="4,2"/>
                     <Button Content="Pay" Style="{StaticResource AccentButton}" Click="RecordPayment_Click" Margin="4,2"/>
                     <Button Content="Add" Style="{StaticResource PrimaryButton}" Click="AddCustomer_Click" Margin="4,2"/>
-                    <Button Content="Delete All" Style="{StaticResource DangerButton}" Click="DeleteAllCustomers_Click" Margin="4,2"/>
+                    <Button x:Name="btnDeleteAll" Content="Delete All" Style="{StaticResource DangerButton}" Click="DeleteAllCustomers_Click" Margin="4,2"/>
                 </WrapPanel>
             </Grid>
         </Border>

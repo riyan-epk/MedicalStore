@@ -39,8 +39,16 @@ namespace MedicalStore.Views
             dpFrom.SelectedDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             dpTo.SelectedDate   = DateTime.Now;
 
+            // The Profit & Loss tab is financial data. A user with ViewReports but not
+            // ViewFinancials (e.g. the Manager preset) may open Reports but must not see P&L.
+            _canViewFinancials = AppSession.HasPermission(Common.Enums.Permission.ViewFinancials);
+            if (!_canViewFinancials)
+                tabFinancial.Visibility = Visibility.Collapsed;
+
             LoadComboBoxes();
         }
+
+        private readonly bool _canViewFinancials;
 
         private void LoadComboBoxes()
         {

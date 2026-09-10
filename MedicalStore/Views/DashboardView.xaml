@@ -43,7 +43,7 @@
                 </Border>
 
                 <!-- Today Profit -->
-                <Border Style="{StaticResource SummaryCard}" Background="{StaticResource Card6Gradient}" Margin="6,0">
+                <Border x:Name="cardTodayProfit" Style="{StaticResource SummaryCard}" Background="{StaticResource Card6Gradient}" Margin="6,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <iconPacks:PackIconMaterial Kind="TrendingUp" Width="20" Height="20" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
