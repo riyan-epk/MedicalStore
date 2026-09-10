@@ -33,7 +33,7 @@ namespace MedicalStore.Views
         private void RefreshLicenseStatus()
         {
             var s = _licenseService.Evaluate();
-            lblLicenseStatus.Text = s.Message;
+            lblLicenseStatus.Text = $"{s.Message}\nMachine ID: {_licenseService.MachineId}";
         }
 
         private void ActivateLicense_Click(object sender, RoutedEventArgs e)

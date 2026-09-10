@@ -2,48 +2,67 @@ using MedicalStore.Common.Helpers;
 
 // MedicalStore Pro — License Key Generator (VENDOR TOOL — do not ship to clients)
 //
+// Keys are HARDWARE-LOCKED: a key only works on the machine whose Machine ID it was
+// generated for. Ask the customer for the "Machine ID" shown in the app's Activation
+// window (format MSP-XXXX-XXXX-XXXX-XXXX), then generate a key for it.
+//
 // Usage:
-//   MedicalStore.KeyGen                -> interactive menu
-//   MedicalStore.KeyGen 30             -> generate a 30-day key
-//   MedicalStore.KeyGen lifetime       -> generate a non-expiring key
-//   MedicalStore.KeyGen verify RYN-...  -> check a key
+//   MedicalStore.KeyGen                                  -> interactive
+//   MedicalStore.KeyGen MSP-XXXX-XXXX-XXXX-XXXX 30       -> 30-day key for that PC
+//   MedicalStore.KeyGen MSP-XXXX-XXXX-XXXX-XXXX lifetime -> non-expiring key for that PC
+//   MedicalStore.KeyGen verify MSP-XXXX-... RYN-...      -> check a key against a Machine ID
 
 Console.WriteLine("=====================================================");
 Console.WriteLine("  MedicalStore Pro  —  License Key Generator");
-Console.WriteLine("  (c) Riyan  •  0309 8480389");
+Console.WriteLine("  (c) Riyan  •  0309 8480389   [hardware-locked keys]");
 Console.WriteLine("=====================================================\n");
 
 if (args.Length >= 1 && args[0].Equals("verify", StringComparison.OrdinalIgnoreCase))
 {
-    var k = args.Length >= 2 ? args[1] : "";
-    if (LicenseKey.Validate(k, out var exp, out var life))
-        Console.WriteLine(life ? "VALID — lifetime key." : $"VALID — expires {exp:dd MMM yyyy}.");
+    var mid = args.Length >= 2 ? args[1] : "";
+    var k = args.Length >= 3 ? args[2] : "";
+    if (LicenseKey.Validate(k, mid, out var exp, out var life))
+        Console.WriteLine(life ? "VALID for that Machine ID — lifetime key." : $"VALID for that Machine ID — expires {exp:dd MMM yyyy}.");
     else
-        Console.WriteLine("INVALID key.");
+        Console.WriteLine("INVALID — wrong key, or not issued for that Machine ID.");
     return;
 }
 
+string machineId;
 int days;
-if (args.Length >= 1)
+
+if (args.Length >= 2)
 {
-    if (args[0].Equals("lifetime", StringComparison.OrdinalIgnoreCase)) days = 0;
-    else if (!int.TryParse(args[0], out days)) { Console.WriteLine("First argument must be a number of days or 'lifetime'."); return; }
+    machineId = args[0];
+    days = ParseDays(args[1]);
 }
 else
 {
-    Console.WriteLine("Enter number of days for the license (e.g. 30, 90, 365),");
-    Console.Write("or type 0 / 'lifetime' for a non-expiring key: ");
-    var input = Console.ReadLine()?.Trim() ?? "";
-    if (input.Equals("lifetime", StringComparison.OrdinalIgnoreCase)) days = 0;
-    else if (!int.TryParse(input, out days)) { Console.WriteLine("Not a valid number."); return; }
+    Console.Write("Customer's Machine ID (MSP-XXXX-XXXX-XXXX-XXXX): ");
+    machineId = (Console.ReadLine() ?? "").Trim();
+    if (string.IsNullOrWhiteSpace(machineId)) { Console.WriteLine("Machine ID is required."); return; }
+
+    Console.Write("License length in days (e.g. 30, 90, 365) or 'lifetime': ");
+    days = ParseDays(Console.ReadLine() ?? "");
 }
 
-var key = LicenseKey.Generate(days);
+if (days == int.MinValue) { Console.WriteLine("Not a valid number of days."); return; }
+
+var key = LicenseKey.Generate(machineId, days);
 Console.WriteLine();
+Console.WriteLine("  MACHINE ID:   " + machineId);
 Console.WriteLine("  LICENSE KEY:  " + key);
 if (days <= 0)
     Console.WriteLine("  Type:         Lifetime (never expires)");
 else
     Console.WriteLine($"  Type:         {days} days  (expires {DateTime.UtcNow.Date.AddDays(days):dd MMM yyyy})");
-Console.WriteLine("\n  Give this key to the customer. They enter it in the app's");
-Console.WriteLine("  Activation window (shown when the trial ends, or Settings).\n");
+Console.WriteLine("\n  This key ONLY works on that machine. Give the key to the");
+Console.WriteLine("  customer; they enter it in the app (trial-end window or");
+Console.WriteLine("  Settings > License).\n");
+
+static int ParseDays(string s)
+{
+    s = s.Trim();
+    if (s.Equals("lifetime", StringComparison.OrdinalIgnoreCase) || s == "0") return 0;
+    return int.TryParse(s, out var d) ? d : int.MinValue;
+}

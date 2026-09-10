@@ -19,6 +19,7 @@ namespace MedicalStore.Views
 
             var status = _license.Evaluate();
             lblStatus.Text = status.Message;
+            txtMachineId.Text = _license.MachineId;
 
             // "Continue Trial" is only available while the trial has not ended.
             btnContinue.Visibility = trialStillActive ? Visibility.Visible : Visibility.Collapsed;
@@ -42,6 +43,16 @@ namespace MedicalStore.Views
                 lblMsg.Text = res.Message;
                 lblMsg.Visibility = Visibility.Visible;
             }
+        }
+
+        private void CopyId_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(txtMachineId.Text);
+                btnCopyId.Content = "Copied";
+            }
+            catch { /* clipboard may be locked by another app; ignore */ }
         }
 
         private void Continue_Click(object sender, RoutedEventArgs e)

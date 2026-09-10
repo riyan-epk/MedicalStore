@@ -4,46 +4,51 @@ using System.Text;
 namespace MedicalStore.Common.Helpers
 {
     /// <summary>
-    /// Offline license-key algorithm shared by the application (to validate keys)
-    /// and the key generator (to create them). A key encodes an expiry date and is
-    /// signed with an HMAC so it cannot be forged or edited without the secret.
+    /// Offline, hardware-locked license-key algorithm shared by the application (to
+    /// validate keys) and the vendor key generator (to create them).
     ///
-    /// Key layout (before formatting): 4 bytes little-endian "expiry code" + 5 bytes
-    /// HMAC-SHA256 tag, Base32-encoded and grouped as  RYN-XXXXX-XXXXX-XXXX .
+    /// A key is bound to a specific Machine ID and encodes an expiry date, signed with an
+    /// HMAC so it cannot be forged, edited, or moved to another machine.
+    ///
+    /// Payload (before formatting): 4 bytes little-endian expiry code + 4 bytes machine
+    /// fingerprint + 5 bytes HMAC-SHA256 tag, Base32-encoded and grouped as
+    ///   RYN-XXXXX-XXXXX-XXXXX-XXXXX .
     /// expiry code 0 = lifetime (never expires); otherwise days since 2020-01-01.
     /// </summary>
     public static class LicenseKey
     {
-        // NOTE: symmetric secret embedded in the app. Adequate for a small commercial
-        // desktop product; keep the key generator private to the vendor.
+        // Symmetric secret embedded in the app and the generator. Keep it stable across
+        // releases or previously issued keys will stop validating.
         private static readonly byte[] Secret =
-            Encoding.UTF8.GetBytes("MedicalStorePro::Riyan::0309-8480389::lic-v1");
+            Encoding.UTF8.GetBytes("MedicalStorePro::Riyan::0309-8480389::lic-v2-hwid");
 
         private static readonly DateTime Epoch = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private const string Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; // RFC4648 base32
 
-        /// <summary>Create a key. days &lt;= 0 produces a lifetime (non-expiring) key.</summary>
-        public static string Generate(int days)
+        /// <summary>
+        /// Create a key locked to <paramref name="machineId"/>. days &lt;= 0 = lifetime.
+        /// </summary>
+        public static string Generate(string machineId, int days)
         {
             int code = 0;
             if (days > 0)
                 code = (int)(DateTime.UtcNow.Date.AddDays(days) - Epoch).TotalDays;
 
-            var payload = new byte[9];
-            BitConverter.GetBytes(code).CopyTo(payload, 0);      // 4 bytes
-            var tag = Tag(code);
-            Array.Copy(tag, 0, payload, 4, 5);                    // 5 bytes
+            var fp = Fingerprint(machineId);
+            var payload = new byte[13];
+            BitConverter.GetBytes(code).CopyTo(payload, 0);   // 4 bytes expiry
+            Array.Copy(fp, 0, payload, 4, 4);                  // 4 bytes machine fingerprint
+            var tag = Tag(code, fp);
+            Array.Copy(tag, 0, payload, 8, 5);                 // 5 bytes signature
 
-            var b32 = Base32Encode(payload);
-            return "RYN-" + Group(b32);
+            return "RYN-" + Group(Base32Encode(payload));
         }
 
         /// <summary>
-        /// Validate a key. Returns true when the signature checks out. On success
-        /// <paramref name="lifetime"/> is true for non-expiring keys, otherwise
-        /// <paramref name="expiryUtc"/> holds the (inclusive) last valid date.
+        /// Validate a key against the current machine. Returns true only when the
+        /// signature checks out AND the key was issued for <paramref name="machineId"/>.
         /// </summary>
-        public static bool Validate(string? key, out DateTime? expiryUtc, out bool lifetime)
+        public static bool Validate(string? key, string machineId, out DateTime? expiryUtc, out bool lifetime)
         {
             expiryUtc = null;
             lifetime = false;
@@ -53,22 +58,42 @@ namespace MedicalStore.Common.Helpers
             byte[] payload;
             try { payload = Base32Decode(cleaned); }
             catch { return false; }
-            if (payload.Length != 9) return false;
+            if (payload.Length != 13) return false;
 
             int code = BitConverter.ToInt32(payload, 0);
-            var expected = Tag(code);
+            var keyFp = new byte[4];
+            Array.Copy(payload, 4, keyFp, 0, 4);
+
+            // 1) authenticity: signature must match this expiry + fingerprint
+            var expected = Tag(code, keyFp);
             for (int i = 0; i < 5; i++)
-                if (payload[4 + i] != expected[i]) return false; // signature mismatch
+                if (payload[8 + i] != expected[i]) return false;
+
+            // 2) machine binding: the key's fingerprint must match THIS machine
+            var localFp = Fingerprint(machineId);
+            for (int i = 0; i < 4; i++)
+                if (keyFp[i] != localFp[i]) return false;
 
             if (code == 0) { lifetime = true; return true; }
             expiryUtc = Epoch.AddDays(code);
             return true;
         }
 
-        private static byte[] Tag(int code)
+        /// <summary>4-byte fingerprint of a normalized Machine ID.</summary>
+        private static byte[] Fingerprint(string machineId)
+        {
+            var norm = (machineId ?? "").Trim().ToUpperInvariant().Replace(" ", "").Replace("-", "");
+            using var sha = SHA256.Create();
+            var h = sha.ComputeHash(Encoding.UTF8.GetBytes("HWID|" + norm));
+            var fp = new byte[4];
+            Array.Copy(h, 0, fp, 0, 4);
+            return fp;
+        }
+
+        private static byte[] Tag(int code, byte[] fp)
         {
             using var h = new HMACSHA256(Secret);
-            return h.ComputeHash(Encoding.UTF8.GetBytes("LIC|" + code));
+            return h.ComputeHash(Encoding.UTF8.GetBytes("LIC|" + code + "|" + Convert.ToHexString(fp)));
         }
 
         private static string Group(string s)

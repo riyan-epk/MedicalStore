@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         Title="Activate MedicalStore Pro"
-        Height="440" Width="460"
+        Height="560" Width="460"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -33,10 +33,24 @@
             </Border>
 
             <StackPanel Grid.Row="1" Margin="34,20,34,0">
-                <Border x:Name="statusBox" CornerRadius="8" Padding="12,10" Background="#FFF3E0" Margin="0,0,0,18">
+                <Border x:Name="statusBox" CornerRadius="8" Padding="12,10" Background="#FFF3E0" Margin="0,0,0,14">
                     <TextBlock x:Name="lblStatus" Text="" FontSize="13" FontWeight="SemiBold"
                                Foreground="#8A5A00" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center"/>
                 </Border>
+
+                <!-- Machine ID: the customer sends this to the vendor to receive a key -->
+                <TextBlock Text="Your Machine ID (send this to get a key)" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="txtMachineId" Grid.Column="0" IsReadOnly="True" FontSize="14" FontWeight="Bold"
+                             Style="{StaticResource ModernTextBox}" Foreground="{StaticResource PrimaryBrush}"/>
+                    <Button x:Name="btnCopyId" Grid.Column="1" Content="Copy" Style="{StaticResource AccentButton}"
+                            Height="38" Width="70" Margin="8,0,0,0" Click="CopyId_Click"/>
+                </Grid>
 
                 <TextBlock Text="License Key" FontSize="12" FontWeight="SemiBold"
                            Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>

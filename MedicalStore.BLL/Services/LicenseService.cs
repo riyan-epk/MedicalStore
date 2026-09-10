@@ -38,6 +38,9 @@ namespace MedicalStore.BLL.Services
             _path = Path.Combine(dir, "license.dat");
         }
 
+        /// <summary>The Machine ID the customer must send to the vendor to get a key.</summary>
+        public string MachineId => HardwareId.Get();
+
         private class State
         {
             public DateTime FirstRun;
@@ -117,9 +120,9 @@ namespace MedicalStore.BLL.Services
             if (now < s.LastRun) now = s.LastRun;
             s.LastRun = now;
 
-            // Valid activated key wins.
+            // Valid activated key wins (must be a key issued for THIS machine).
             if (!string.IsNullOrWhiteSpace(s.Key) &&
-                LicenseKey.Validate(s.Key, out var expiry, out var lifetime))
+                LicenseKey.Validate(s.Key, HardwareId.Get(), out var expiry, out var lifetime))
             {
                 if (lifetime)
                 {
@@ -156,8 +159,8 @@ namespace MedicalStore.BLL.Services
         /// <summary>Try to activate a key. On success persists it and returns the new status.</summary>
         public (bool Success, string Message, LicenseStatus Status) Activate(string key)
         {
-            if (!LicenseKey.Validate(key, out var expiry, out var lifetime))
-                return (false, "Invalid license key. Please check and try again.", Evaluate());
+            if (!LicenseKey.Validate(key, HardwareId.Get(), out var expiry, out var lifetime))
+                return (false, "Invalid key, or this key was issued for a different computer. Make sure the Machine ID matches.", Evaluate());
 
             if (!lifetime && expiry.HasValue && expiry.Value.Date < DateTime.UtcNow.Date)
                 return (false, $"This key expired on {expiry.Value:dd MMM yyyy}.", Evaluate());
